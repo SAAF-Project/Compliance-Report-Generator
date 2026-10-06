@@ -17,6 +17,8 @@ from unittest.mock import MagicMock, patch
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from tests import endpoints as E
+
 from saaf.core.agent import ComplianceAgent, ComplianceReportError
 from saaf.core.llm import LLMError, LLMResponse
 from saaf.core.models import AuditInput, ComplianceReport
@@ -122,7 +124,7 @@ class TestAgentAuditTrailMetadata(_AgentTestCase):
     def test_record_names_provider_endpoint_settings_and_call_outcome(self):
         import tempfile
         from saaf.core.audit_trail import AuditTrail
-        self.client.endpoint = "https://llm.example.com/v1/chat/completions?api_key=SECRET"
+        self.client.endpoint = E.ENDPOINT_WITH_QUERY_SECRET
         self.client.complete.side_effect = [
             _status_error(503),
             _response(json.dumps(_report_dict())),
@@ -135,7 +137,7 @@ class TestAgentAuditTrailMetadata(_AgentTestCase):
 
         self.assertEqual(record["provider"], self.agent.config.provider)
         self.assertEqual(record["model"], self.agent.config.model)
-        self.assertEqual(record["endpoint_host"], "llm.example.com")
+        self.assertEqual(record["endpoint_host"], E.HOSTED_HOST)
         self.assertNotIn("SECRET", text)
         self.assertEqual(record["settings"]["max_tokens"], self.agent.config.max_tokens)
         self.assertTrue(record["kb_version"])

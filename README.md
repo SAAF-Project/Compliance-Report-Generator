@@ -70,7 +70,7 @@ Notes:
 
 1. **Deterministic mapping** — resolves the entity's jurisdiction, industry, and listed status against a knowledge base of 30+ frameworks (DORA, NIS2, GDPR, ISO 27001, SOX, HIPAA, and more) with no API call needed (`saaf/core/mapper.py`, `saaf/knowledge/`).
 2. **Dynamic prompt construction** — builds a system prompt containing only the selected frameworks, reducing hallucination (`saaf/prompts/system_prompt.py`).
-3. **LLM call** — sends the engagement details to the configured model (default Claude `claude-opus-4-6` with adaptive thinking; any OpenAI-compatible endpoint is supported) and retries on transient errors (`saaf/core/agent.py`, `saaf/core/llm.py`).
+3. **LLM call** — sends the engagement details to the configured model (default Claude `claude-opus-4-6` with adaptive thinking; any OpenAI-compatible endpoint is supported) and retries on transient errors (`saaf/core/agent.py`, `saaf/core/llm/`, one module per provider).
 4. **Validation and rendering** — validates the JSON response against Pydantic models and renders a rich terminal report with control objectives, gap analysis, and priority actions (`saaf/core/models.py`, `saaf/output/formatter.py`).
 
 ## Input / output

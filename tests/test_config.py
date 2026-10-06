@@ -15,6 +15,8 @@ from unittest.mock import patch
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from tests import endpoints as E
+
 from config import Config
 
 
@@ -55,12 +57,12 @@ class TestConfigProviders(unittest.TestCase):
 
     def test_custom_endpoint_needs_no_key_for_openai_compatible(self):
         with _env():
-            c = Config(provider="openai", model="llama3", base_url="http://localhost:11434/v1")
-        self.assertEqual((c.api_key, c.base_url), ("", "http://localhost:11434/v1"))
+            c = Config(provider="openai", model="llama3", base_url=E.LOCAL_OLLAMA_BASE)
+        self.assertEqual((c.api_key, c.base_url), ("", E.LOCAL_OLLAMA_BASE))
 
     def test_anthropic_still_requires_key_with_custom_endpoint(self):
         with _env(), self.assertRaises(EnvironmentError):
-            Config(base_url="https://gateway.example")
+            Config(base_url=E.ANTHROPIC_PROXY_BASE)
 
     def test_unknown_provider_rejected(self):
         with _env(), self.assertRaises(EnvironmentError):
@@ -70,19 +72,19 @@ class TestConfigProviders(unittest.TestCase):
 class TestConfigPrecedence(unittest.TestCase):
 
     def test_env_vars_apply(self):
-        with _env(SAAF_PROVIDER="OpenAI", SAAF_MODEL="m1", SAAF_BASE_URL="https://h.example/v1/",
+        with _env(SAAF_PROVIDER="OpenAI", SAAF_MODEL="m1", SAAF_BASE_URL=E.SLASHED_BASE,
                   SAAF_API_KEY="generic"):
             c = Config()
         self.assertEqual((c.provider, c.model, c.base_url, c.api_key),
-                         ("openai", "m1", "https://h.example/v1", "generic"))
+                         ("openai", "m1", E.SLASHED_BASE.rstrip("/"), "generic"))
 
     def test_explicit_arguments_beat_env(self):
-        with _env(SAAF_PROVIDER="anthropic", SAAF_MODEL="env-model", SAAF_BASE_URL="https://env.example",
+        with _env(SAAF_PROVIDER="anthropic", SAAF_MODEL="env-model", SAAF_BASE_URL=E.ENV_BASE,
                   ANTHROPIC_API_KEY="k"):
-            c = Config(provider="openai", model="arg-model", base_url="https://arg.example/v1",
+            c = Config(provider="openai", model="arg-model", base_url=E.ARG_BASE,
                        api_key="arg-key")
         self.assertEqual((c.provider, c.model, c.base_url, c.api_key),
-                         ("openai", "arg-model", "https://arg.example/v1", "arg-key"))
+                         ("openai", "arg-model", E.ARG_BASE, "arg-key"))
 
     def test_saaf_api_key_beats_provider_key(self):
         with _env(SAAF_API_KEY="generic", ANTHROPIC_API_KEY="specific"):

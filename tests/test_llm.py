@@ -22,6 +22,8 @@ from unittest.mock import MagicMock, patch
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from tests import endpoints as E
+
 from saaf.core.llm import (
     AnthropicClient,
     LLMError,
@@ -104,8 +106,8 @@ class TestOpenAICompatibleClient(_ServerTestCase):
                          (11, 22, "stop"))
 
     def test_exposes_the_endpoint_it_calls(self):
-        client = OpenAICompatibleClient("", "m", 5, "http://localhost:11434/v1")
-        self.assertEqual(client.endpoint, "http://localhost:11434/v1/chat/completions")
+        client = OpenAICompatibleClient("", "m", 5, E.LOCAL_OLLAMA_BASE)
+        self.assertEqual(client.endpoint, E.LOCAL_OLLAMA_ENDPOINT)
 
     def test_trailing_slash_and_full_endpoint_url_both_work(self):
         server = self.serve(body=_completion())
@@ -177,20 +179,20 @@ class TestOpenAICompatibleClient(_ServerTestCase):
 class TestValidateBaseUrl(unittest.TestCase):
 
     def test_accepts_and_strips_trailing_slash(self):
-        self.assertEqual(validate_base_url(" https://example.com/v1/ "), "https://example.com/v1")
+        self.assertEqual(validate_base_url(f" {E.SLASHED_BASE} "), E.SLASHED_BASE.rstrip("/"))
 
     def test_rejects_bad_scheme_missing_host_and_embedded_credentials(self):
-        for bad in ("ftp://example.com", "example.com/v1", "http://", "https://user:pw@example.com"):
+        for bad in (E.FTP_URL, "example.com/v1", "http://", E.URL_WITH_CREDENTIALS):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 validate_base_url(bad)
 
     def test_plain_http_to_remote_host_warns_but_loopback_does_not(self):
         with self.assertLogs("saaf.llm", level="WARNING") as cm:
-            validate_base_url("http://llm.internal.example/v1")
+            validate_base_url(E.INTERNAL_PLAIN_HTTP_BASE)
         self.assertIn("unencrypted", cm.output[0])
         with self.assertRaises(AssertionError):  # assertLogs fails when nothing is logged
             with self.assertLogs("saaf.llm", level="WARNING"):
-                validate_base_url("http://localhost:11434/v1")
+                validate_base_url(E.LOCAL_OLLAMA_BASE)
 
 
 class TestCreateClient(unittest.TestCase):
@@ -202,14 +204,14 @@ class TestCreateClient(unittest.TestCase):
         return MagicMock(**defaults)
 
     def test_openai_provider_builds_compatible_client_with_custom_endpoint(self):
-        client = create_client(self._config(base_url="http://localhost:11434/v1"))
+        client = create_client(self._config(base_url=E.LOCAL_OLLAMA_BASE))
         self.assertIsInstance(client, OpenAICompatibleClient)
-        self.assertEqual(client.url, "http://localhost:11434/v1/chat/completions")
+        self.assertEqual(client.url, E.LOCAL_OLLAMA_ENDPOINT)
         self.assertEqual(client.timeout, 7)
 
     def test_openai_default_endpoint(self):
         client = create_client(self._config())
-        self.assertEqual(client.url, "https://api.openai.com/v1/chat/completions")
+        self.assertEqual(client.url, E.OPENAI_DEFAULT_ENDPOINT)
 
     def test_unknown_provider_rejected(self):
         with self.assertRaises(ValueError):
@@ -221,15 +223,15 @@ class TestAnthropicClient(unittest.TestCase):
 
     def test_timeout_and_custom_base_url_passed_to_sdk(self):
         with patch("anthropic.Anthropic") as sdk:
-            AnthropicClient("k", "claude-x", 42, "https://gateway.example/anthropic")
+            AnthropicClient("k", "claude-x", 42, E.ANTHROPIC_PROXY_BASE)
         self.assertEqual(sdk.call_args.kwargs["timeout"], 42)
-        self.assertEqual(sdk.call_args.kwargs["base_url"], "https://gateway.example/anthropic")
+        self.assertEqual(sdk.call_args.kwargs["base_url"], E.ANTHROPIC_PROXY_BASE)
 
     def test_exposes_the_endpoint_the_sdk_will_call(self):
         with patch("anthropic.Anthropic") as sdk:
-            sdk.return_value.base_url = "https://api.anthropic.com"
+            sdk.return_value.base_url = E.ANTHROPIC_DEFAULT_ENDPOINT
             client = AnthropicClient("k", "claude-x", 42)
-        self.assertEqual(client.endpoint, "https://api.anthropic.com")
+        self.assertEqual(client.endpoint, E.ANTHROPIC_DEFAULT_ENDPOINT)
 
     def test_base_url_omitted_when_not_set(self):
         with patch("anthropic.Anthropic") as sdk:
