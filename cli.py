@@ -23,6 +23,25 @@ from saaf.output.formatter import render_report
 console = Console()
 err_console = Console(stderr=True)
 
+DEFAULT_ALIAS = "Entity A"
+
+DATA_FLOW_WARNING = (
+    "[yellow]Warning:[/yellow] company_name is sent verbatim to Anthropic's API. "
+    "Use a synthetic name, or --anonymise / --alias NAME to send a placeholder. "
+    "Suppress this notice with --yes."
+)
+
+
+def apply_alias(audit_input: AuditInput, alias: str) -> AuditInput:
+    """Return a copy of the input that is safe to send: real name replaced by alias."""
+    return audit_input.model_copy(update={"company_name": alias})
+
+
+def restore_real_name(report, real_name: str):
+    """Return the report with the real name put back in audit_input (local display only)."""
+    restored = report.audit_input.model_copy(update={"company_name": real_name})
+    return report.model_copy(update={"audit_input": restored})
+
 
 # ---------------------------------------------------------------------------
 # Interactive mode
@@ -119,6 +138,13 @@ Examples:
                         help="Show testing approaches for each control (report mode only)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Show which frameworks would be selected without calling the API")
+    parser.add_argument("--anonymise", "--anonymize", action="store_true",
+                        help=f"Send a placeholder alias (default '{DEFAULT_ALIAS}') to the API "
+                             "instead of the company name; the real name stays local")
+    parser.add_argument("--alias", metavar="NAME",
+                        help="Alias to send to the API in place of the company name (implies --anonymise)")
+    parser.add_argument("--yes", "--no-warn", dest="yes", action="store_true",
+                        help="Suppress the warning that the company name is sent to the API")
     parser.add_argument("--log-level", dest="log_level",
                         choices=["debug", "info", "warning", "error"], default="info",
                         help="Logging verbosity (default: info)")
@@ -194,6 +220,14 @@ def main() -> int:
         err_console.print(f"[red]Configuration error:[/red] {e}")
         return 1
 
+    # Data flow: the real company name only leaves the machine if not aliased
+    real_name = audit_input.company_name
+    anonymised = bool(args.anonymise or args.alias)
+    if anonymised:
+        audit_input = apply_alias(audit_input, args.alias or DEFAULT_ALIAS)
+    elif not args.yes:
+        err_console.print(DATA_FLOW_WARNING)
+
     agent = ComplianceAgent(config)
 
     console.print("\n[bold]Generating compliance report...[/bold] ", end="")
@@ -207,6 +241,10 @@ def main() -> int:
             err_console.print("\n[dim]Raw response (first 500 chars):[/dim]")
             err_console.print(e.raw_response[:500])
         return 1
+
+    if anonymised:
+        # Real name is restored locally only; it was never sent to the API
+        report = restore_real_name(report, real_name)
 
     # Output
     if args.output == "json":
