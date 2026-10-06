@@ -20,12 +20,12 @@ from unittest.mock import MagicMock, patch
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from saaf.core.agent import ComplianceAgent
+from saaf.core.agent import ComplianceAgent, ComplianceReportError
 from saaf.core.mapper import FrameworkMapper
 from saaf.core.models import DISCLAIMER, AuditInput, ComplianceReport
 from saaf.output import formatter
 from saaf.knowledge.frameworks import FRAMEWORK_REGISTRY, KB_VERSION
-from saaf.knowledge.regulations import normalise_jurisdiction
+from saaf.knowledge.regulations import jurisdiction_warning, normalise_jurisdiction
 from saaf.prompts.system_prompt import build_system_prompt, build_user_message
 from config import Config
 
@@ -329,6 +329,66 @@ class TestSystemPromptBuilder(unittest.TestCase):
     def test_user_message_lists_frameworks(self):
         msg = build_user_message(self.audit_input, self.mapping)
         self.assertIn("FRAMEWORKS IN SCOPE", msg)
+
+
+# ---------------------------------------------------------------------------
+# Grounding check — model output must stay within the mapped frameworks
+# ---------------------------------------------------------------------------
+
+class TestGroundingCheck(unittest.TestCase):
+    def _report(self, fw_names, reg_names):
+        return ComplianceReport(
+            audit_input=_make_input(),
+            mandatory_regulations=[
+                {"regulation_name": n, "jurisdiction": "US", "mandatory": True,
+                 "applicable_sections": [], "compliance_notes": "n"}
+                for n in reg_names
+            ],
+            framework_assessments=[
+                {"framework_name": n, "applicability_rationale": "r",
+                 "control_objectives": [], "key_gaps": [], "risk_rating": "High"}
+                for n in fw_names
+            ],
+            gap_risk_summary={
+                "overall_risk_rating": "High", "critical_gaps": [],
+                "recommended_priority_actions": [],
+                "estimated_remediation_effort": "Medium", "executive_summary": "s",
+            },
+        )
+
+    def setUp(self):
+        self.mapping = FrameworkMapper(_make_input()).map()  # US / Healthcare / Private
+
+    def test_mapped_names_accepted_in_variants(self):
+        full = next(m.full_name for m in self.mapping.framework_matches if m.key == "HIPAA")
+        report = self._report(
+            [full, "hipaa"],
+            ["HIPAA", "Health Insurance Portability and Accountability Act"],
+        )
+        ComplianceAgent._check_grounding(report, self.mapping)  # does not raise
+
+    def test_out_of_scope_framework_rejected_with_raw_response(self):
+        self.assertNotIn("SOX", self.mapping.applicable_framework_keys)
+        report = self._report(["HIPAA", "Sarbanes-Oxley Act 2002 (SOX)"], [])
+        with self.assertRaises(ComplianceReportError) as ctx:
+            ComplianceAgent._check_grounding(report, self.mapping, raw_json="RAW")
+        self.assertIn("Sarbanes-Oxley", str(ctx.exception))
+        self.assertEqual(ctx.exception.raw_response, "RAW")
+
+    def test_invented_regulation_rejected(self):
+        report = self._report(["HIPAA"], ["Totally Invented Act 2031"])
+        with self.assertRaises(ComplianceReportError):
+            ComplianceAgent._check_grounding(report, self.mapping)
+
+    def test_run_rejects_out_of_scope_framework_end_to_end(self):
+        payload = self._report(["Totally Invented Act 2031"], []).model_dump_json()
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test"}), \
+                patch("saaf.core.agent.anthropic.Anthropic"):
+            agent = ComplianceAgent(Config())
+        with patch.object(agent, "_call_claude", return_value=payload):
+            with self.assertRaises(ComplianceReportError) as ctx:
+                agent.run(_make_input())
+        self.assertEqual(ctx.exception.raw_response, payload)
 
 
 # ---------------------------------------------------------------------------
@@ -666,6 +726,84 @@ class TestEntityNameDataFlow(unittest.TestCase):
         logged = "\n".join(cm.output)
         self.assertNotIn(self.REAL, logged)
         self.assertIn("Entity A", logged)
+
+
+# ---------------------------------------------------------------------------
+# Test 9 — Unrecognised jurisdiction warning (issue #10)
+# ---------------------------------------------------------------------------
+
+_MINIMAL_REPORT = {
+    "mandatory_regulations": [],
+    "framework_assessments": [],
+    "gap_risk_summary": {
+        "overall_risk_rating": "Low",
+        "critical_gaps": [],
+        "recommended_priority_actions": [],
+        "estimated_remediation_effort": "Low",
+        "executive_summary": "Summary.",
+    },
+    "warnings": ["model supplied warning"],
+}
+
+
+class TestJurisdictionWarning(unittest.TestCase):
+    PYTHON = TestCliDryRun.PYTHON
+    CLI = TestCliDryRun.CLI
+
+    def _agent(self):
+        agent = ComplianceAgent.__new__(ComplianceAgent)
+        agent._call_claude = lambda *a, **k: json.dumps(_MINIMAL_REPORT)
+        return agent
+
+    def test_warning_none_for_supported(self):
+        for country in ["US", "Germany", "UK", "Australia", "Singapore"]:
+            with self.subTest(country=country):
+                self.assertIsNone(jurisdiction_warning(country))
+
+    def test_warning_for_unknown(self):
+        self.assertIn("Brazil", jurisdiction_warning("Brazil"))
+
+    def test_agent_logs_and_sets_report_warning(self):
+        with self.assertLogs("saaf.agent", level="WARNING") as cm:
+            report, _ = self._agent().run(_make_input(country="Brazil"))
+        self.assertTrue(any("Brazil" in m for m in cm.output))
+        self.assertEqual(report.warnings, [jurisdiction_warning("Brazil")])
+
+    def test_agent_overrides_model_supplied_warnings(self):
+        report, _ = self._agent().run(_make_input(country="US"))
+        self.assertEqual(report.warnings, [])
+
+    def test_warnings_not_in_model_schema(self):
+        self.assertNotIn('"warnings"', build_system_prompt(
+            _make_input(), FrameworkMapper(_make_input()).map()))
+
+    def test_formatter_renders_warning(self):
+        from rich.console import Console
+        from saaf.output import formatter
+        report, _ = self._agent().run(_make_input(country="Brazil"))
+        console = Console(record=True, width=120)
+        with patch.object(formatter, "console", console):
+            formatter.render_report(report)
+        self.assertIn("not recognised", console.export_text())
+
+    def test_cli_dry_run_warns_on_stderr(self):
+        result = subprocess.run(
+            [self.PYTHON, self.CLI, "--company", "X", "--industry", "Healthcare",
+             "--country", "Brazil", "--listed-status", "Private",
+             "--audit-topic", "Cybersecurity", "--dry-run"],
+            capture_output=True, text=True, cwd=str(PROJECT_ROOT),
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("not recognised", result.stderr)
+
+    def test_cli_no_warning_for_supported(self):
+        result = subprocess.run(
+            [self.PYTHON, self.CLI, "--company", "X", "--industry", "Healthcare",
+             "--country", "US", "--listed-status", "Private",
+             "--audit-topic", "Cybersecurity", "--dry-run"],
+            capture_output=True, text=True, cwd=str(PROJECT_ROOT),
+        )
+        self.assertNotIn("not recognised", result.stderr)
 
 
 # ---------------------------------------------------------------------------

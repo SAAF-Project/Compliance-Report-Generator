@@ -20,6 +20,7 @@ from config import Config
 from saaf.core.agent import ComplianceAgent, ComplianceReportError
 from saaf.core.audit_trail import AuditTrail
 from saaf.core.models import AuditInput, AuditTopic, Industry, ListedStatus
+from saaf.knowledge.regulations import jurisdiction_warning
 from saaf.output.formatter import render_references_note, render_report
 
 console = Console()
@@ -76,7 +77,7 @@ def run_interactive() -> AuditInput:
         get_args(Industry),
     )
 
-    country = Prompt.ask("[bold]Country / jurisdiction[/bold] (e.g. US, UK, Germany, Singapore)")
+    country = Prompt.ask("[bold]Country / jurisdiction[/bold] (e.g. US, EU, UK, Australia, Singapore)")
 
     listed_status = _prompt_choice(
         "Listed status",
@@ -208,6 +209,10 @@ def main() -> int:
             listed_status=args.listed_status,
             audit_topic=args.audit_topic,
         )
+
+    warning = jurisdiction_warning(audit_input.country)
+    if warning:
+        err_console.print(f"[yellow]Warning:[/yellow] {warning}")
 
     # Dry-run: just show the mapping
     if args.dry_run:

@@ -57,6 +57,10 @@ Only the five engagement fields (company name, industry, country, listed status,
 - `--anonymise` (or `--alias NAME`, which implies it) sends a placeholder (default `Entity A`) instead. The real name stays on your machine, and logs show only the alias. The `audit_input` in the report shown or saved locally has the real name restored, so treat that output as sensitive. Industry, country, listed status and audit topic are still sent.
 - Prefer synthetic or anonymised names for testing.
 
+## Supported jurisdictions
+
+The knowledge base targets **US, EU (incl. EEA member countries), UK, Australia and Singapore**. Canada, India and Japan have minimal partial coverage. Any other country resolves to a generic global framework set, so output may be thin. In that case the CLI prints a warning to stderr (also with `--dry-run`), a warning is logged, and the report carries a visible warning (`warnings` field in JSON).
+
 ## Audit criteria
 
 See [AUDIT-CRITERIA.md](AUDIT-CRITERIA.md) for control objectives, acceptance criteria, known gaps and observability.
