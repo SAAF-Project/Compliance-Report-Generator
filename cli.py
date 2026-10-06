@@ -18,7 +18,7 @@ from rich.prompt import Prompt
 from config import Config
 from saaf.core.agent import ComplianceAgent, ComplianceReportError
 from saaf.core.models import AuditInput, AuditTopic, Industry, ListedStatus
-from saaf.output.formatter import render_report
+from saaf.output.formatter import render_references_note, render_report
 
 console = Console()
 err_console = Console(stderr=True)
@@ -217,8 +217,10 @@ def main() -> int:
             console.print(f"[green]Report saved to:[/green] {args.output_file}")
         else:
             print(json_str)
+        # Keep stdout pure JSON; surface the note on stderr.
+        render_references_note(report, mapping, target=err_console)
     else:
-        render_report(report, verbose=args.verbose)
+        render_report(report, verbose=args.verbose, mapping=mapping)
         if args.output_file:
             with open(args.output_file, "w", encoding="utf-8") as f:
                 f.write(report.model_dump_json(indent=2))
