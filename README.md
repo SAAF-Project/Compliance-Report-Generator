@@ -45,6 +45,10 @@ Requires `ANTHROPIC_API_KEY` set in the environment.
 
 See [AUDIT-CRITERIA.md](AUDIT-CRITERIA.md) for control objectives, acceptance criteria, known gaps and observability.
 
+## Maintainers
+
+Rohan Sobha is the repo maintainer. Owners of the PDCA Check and Act phases are still to be confirmed; see [Ownership & PDCA status](AUDIT-CRITERIA.md#ownership--pdca-status).
+
 ## Related plan
 
 [Compliance Report Generator — Rohan Sobha](https://github.com/Iodine98/SAAF-Project/blob/main/plans/hackathon-2/rohan-sobha-compliance-report-generator.md)

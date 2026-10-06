@@ -14,7 +14,7 @@
 |---|---|
 | **Agent** | Compliance Report Generator |
 | **Repository** | https://github.com/SAAF-Project/Compliance-Report-Generator |
-| **Maintainer(s)** | Rohan Sobha |
+| **Maintainer(s)** | Rohan Sobha (confirmed repo maintainer); other maintainers TBC — to be confirmed by maintainer. See [Ownership & PDCA status](#ownership--pdca-status) |
 | **Last reviewed** | 2026-10-06 |
 | **Status** | Draft |
 
@@ -91,7 +91,18 @@ Findings do not use `outputs/schemas/finding-schema.json` today. The output is a
 - **No persistent audit trail** (see section 7).
 - **Tests are unit-level only.** No test exercises `ComplianceAgent.run` with a mocked or recorded API response, and no test covers a model response with an out-of-scope framework or a rewritten disclaimer. Not evaluated against real model output.
 - **Unused config.** `Config.timeout_seconds` is defined but not passed to the API client.
-- **Repo ownership.** Plan was submitted on the maintainer's behalf by a colleague; the Check and Act PDCA phases are not started.
+- **Repo ownership.** Maintainer is recorded in Metadata and phase owners are listed below, but the Check and Act PDCA phases are not started and their owners are still TBC — to be confirmed by maintainer.
+
+### Ownership & PDCA status
+
+The plan was submitted on the maintainer's behalf by a colleague. Only Rohan Sobha is a confirmed maintainer; no other names are recorded here.
+
+| PDCA phase | Status | Owner |
+|---|---|---|
+| Plan | Submitted on the maintainer's behalf by a colleague | Rohan Sobha (maintainer); submitting colleague TBC — to be confirmed by maintainer |
+| Do | Draft implementation exists in this repo | TBC — to be confirmed by maintainer |
+| Check | Not started | TBC — to be confirmed by maintainer |
+| Act | Not started | TBC — to be confirmed by maintainer |
 
 ## 6. Status / validation
 
