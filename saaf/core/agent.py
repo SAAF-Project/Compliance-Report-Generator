@@ -8,13 +8,16 @@ import json
 import logging
 import re
 import time
+from typing import Optional
 
 import anthropic
 from pydantic import ValidationError
 
 from config import Config
+from saaf.core.audit_trail import AuditTrail, utc_now
 from saaf.core.mapper import FrameworkMapper, FrameworkMatch, MappingResult
-from saaf.core.models import AuditInput, ComplianceReport
+from saaf.core.models import DISCLAIMER, AuditInput, ComplianceReport
+from saaf.knowledge.frameworks import KB_VERSION
 from saaf.prompts.system_prompt import build_system_prompt, build_user_message
 
 log = logging.getLogger("saaf.agent")
@@ -51,9 +54,15 @@ def _name_aliases(match: FrameworkMatch) -> set[str]:
 
 
 class ComplianceAgent:
+    # Optional opt-in audit trail (see saaf/core/audit_trail.py); off by default.
+    audit_trail: Optional[AuditTrail] = None
+
     def __init__(self, config: Config | None = None) -> None:
         self.config = config or Config()
-        self.client = anthropic.Anthropic(api_key=self.config.api_key)
+        self.client = anthropic.Anthropic(
+            api_key=self.config.api_key,
+            timeout=self.config.timeout_seconds,
+        )
 
     # ------------------------------------------------------------------
     # Public entry point
@@ -70,6 +79,8 @@ class ComplianceAgent:
                  audit_input.company_name, audit_input.industry,
                  audit_input.country, audit_input.listed_status, audit_input.audit_topic)
 
+        log.info("Knowledge base version: %s", KB_VERSION)
+
         # Step 1: Deterministic framework mapping (no API call)
         mapping = FrameworkMapper(audit_input).map()
         log.info("Mapper: jurisdiction=%s  frameworks=%d  [%s]",
@@ -84,6 +95,7 @@ class ComplianceAgent:
                   len(system_prompt), len(user_message))
 
         # Step 3: Call Claude with streaming + adaptive thinking
+        started_at = utc_now()
         raw_json = self._call_claude(system_prompt, user_message)
 
         # Step 4: Parse and validate
@@ -91,6 +103,19 @@ class ComplianceAgent:
 
         # Step 5: Reject anything the deterministic mapping did not select
         self._check_grounding(report, mapping, raw_json)
+
+        if self.audit_trail is not None:
+            self.audit_trail.record(
+                report_id=report.report_id,
+                inputs=audit_input.model_dump(),
+                framework_keys=[m.key for m in mapping.framework_matches],
+                model=self.config.model,
+                system_prompt=system_prompt,
+                user_message=user_message,
+                started_at=started_at,
+                finished_at=utc_now(),
+                raw_response=raw_json,
+            )
         log.info("Report ready: id=%s  risk=%s  frameworks=%d  regulations=%d",
                  report.report_id,
                  report.gap_risk_summary.overall_risk_rating,
@@ -198,6 +223,9 @@ class ComplianceAgent:
             log.debug("audit_input missing from response — injecting from input")
             data["audit_input"] = audit_input.model_dump()
 
+        if "disclaimer" in data:
+            log.warning("Model supplied a disclaimer — ignoring and using the standard text")
+
         try:
             report = ComplianceReport(**data)
         except ValidationError as e:
@@ -207,6 +235,8 @@ class ComplianceAgent:
                 raw_response=raw_json,
             ) from e
 
+        # Not model-controlled: always force the standard disclaimer.
+        report.disclaimer = DISCLAIMER
         return report
 
     @staticmethod

@@ -22,8 +22,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from saaf.core.agent import ComplianceAgent, ComplianceReportError
 from saaf.core.mapper import FrameworkMapper
-from saaf.core.models import AuditInput, ComplianceReport
-from saaf.knowledge.frameworks import FRAMEWORK_REGISTRY
+from saaf.core.models import DISCLAIMER, AuditInput, ComplianceReport
+from saaf.output import formatter
+from saaf.knowledge.frameworks import FRAMEWORK_REGISTRY, KB_VERSION
 from saaf.knowledge.regulations import normalise_jurisdiction
 from saaf.prompts.system_prompt import build_system_prompt, build_user_message
 from config import Config
@@ -459,6 +460,18 @@ class TestJsonExtraction(unittest.TestCase):
         )
 
 
+class TestClientTimeout(unittest.TestCase):
+    """Config.timeout_seconds must be passed to the Anthropic client."""
+
+    def test_timeout_passed_to_client(self) -> None:
+        config = Config()
+        config.timeout_seconds = 42
+        with patch("saaf.core.agent.anthropic.Anthropic") as mock_client:
+            ComplianceAgent(config)
+        mock_client.assert_called_once()
+        self.assertEqual(mock_client.call_args.kwargs["timeout"], 42)
+
+
 # ---------------------------------------------------------------------------
 # Test 7 — CLI dry-run (end-to-end without API)
 # ---------------------------------------------------------------------------
@@ -546,6 +559,81 @@ class TestCliDryRun(unittest.TestCase):  # was Test 6, now Test 7
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("invalid choice", result.stderr.lower(),
                       "argparse should report 'invalid choice'")
+
+
+class TestKnowledgeBaseMetadata(unittest.TestCase):
+    def test_kb_version_is_non_empty_string(self):
+        self.assertIsInstance(KB_VERSION, str)
+        self.assertTrue(KB_VERSION)
+
+    def test_all_entries_have_metadata_keys(self):
+        for key, fw in FRAMEWORK_REGISTRY.items():
+            self.assertIn("last_reviewed", fw, key)
+            self.assertIn("source", fw, key)
+
+    def test_metadata_values_are_well_formed(self):
+        from datetime import date
+        for key, fw in FRAMEWORK_REGISTRY.items():
+            if fw["last_reviewed"] is not None:
+                date.fromisoformat(fw["last_reviewed"])  # raises if malformed
+            if fw["source"] is not None:
+                self.assertTrue(fw["source"].strip(), key)
+
+    def test_report_entries_missing_review_date(self):
+        # Informational: lists entries a maintainer still needs to review.
+        # Deliberately does not fail, so dates are only ever set honestly.
+        missing = sorted(k for k, fw in FRAMEWORK_REGISTRY.items()
+                         if fw["last_reviewed"] is None)
+        print("\nFrameworks missing last_reviewed: %d/%d: %s"
+              % (len(missing), len(FRAMEWORK_REGISTRY), ", ".join(missing)))
+
+
+class TestDisclaimerNotOverridable(unittest.TestCase):
+    """The standard disclaimer must survive any model-supplied value (CO-3)."""
+
+    def setUp(self):
+        self.agent = ComplianceAgent.__new__(ComplianceAgent)  # skip __init__ (no real API)
+        self.ai = _make_input()
+
+    def _response(self, **extra) -> str:
+        data = {
+            "mandatory_regulations": [],
+            "framework_assessments": [],
+            "gap_risk_summary": {
+                "overall_risk_rating": "High",
+                "critical_gaps": [],
+                "recommended_priority_actions": [],
+                "estimated_remediation_effort": "Medium",
+                "executive_summary": "Test summary.",
+            },
+        }
+        data.update(extra)
+        return json.dumps(data)
+
+    def test_schema_hides_disclaimer_from_model(self):
+        prompt = build_system_prompt(self.ai, FrameworkMapper(self.ai).map())
+        self.assertNotIn('"disclaimer"', prompt)
+
+    def test_omitted_disclaimer_gets_standard_text(self):
+        report = self.agent._parse_and_validate(self._response(), self.ai)
+        self.assertEqual(report.disclaimer, DISCLAIMER)
+
+    def test_rewritten_disclaimer_is_replaced(self):
+        raw = self._response(disclaimer="This report is audit-ready and legally binding.")
+        report = self.agent._parse_and_validate(raw, self.ai)
+        self.assertEqual(report.disclaimer, DISCLAIMER)
+
+    def test_disclaimer_in_json_output(self):
+        raw = self._response(disclaimer="ignore me")
+        report = self.agent._parse_and_validate(raw, self.ai)
+        self.assertEqual(json.loads(report.model_dump_json())["disclaimer"], DISCLAIMER)
+
+    def test_disclaimer_in_rendered_report(self):
+        report = self.agent._parse_and_validate(self._response(disclaimer="x"), self.ai)
+        with formatter.console.capture() as cap:
+            formatter.render_report(report)
+        rendered = " ".join(cap.get().replace("│", " ").split())
+        self.assertIn(DISCLAIMER, rendered)
 
 
 # ---------------------------------------------------------------------------
