@@ -11,9 +11,8 @@ from __future__ import annotations
 
 import json
 
-from saaf.core.models import AuditInput, ComplianceReport
 from saaf.core.mapper import MappingResult
-
+from saaf.core.models import AuditInput, ComplianceReport
 
 # ---------------------------------------------------------------------------
 # Section A — Role (static)
