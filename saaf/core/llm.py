@@ -92,6 +92,8 @@ class AnthropicClient:
         if base_url:
             kwargs["base_url"] = base_url
         self.client = anthropic.Anthropic(**kwargs)
+        # The SDK also honours ANTHROPIC_BASE_URL, so record what it will really call
+        self.endpoint = str(self.client.base_url)
 
     def complete(self, system: str, user: str, max_tokens: int) -> LLMResponse:
         anthropic = self._anthropic
@@ -156,6 +158,7 @@ class OpenAICompatibleClient:
         base = validate_base_url(base_url or DEFAULT_OPENAI_BASE_URL)
         # Accept either a base URL (…/v1) or the full endpoint URL
         self.url = base if base.endswith("/chat/completions") else base + "/chat/completions"
+        self.endpoint = self.url
         self._opener = urllib.request.build_opener(_NoRedirect)
 
     def complete(self, system: str, user: str, max_tokens: int) -> LLMResponse:

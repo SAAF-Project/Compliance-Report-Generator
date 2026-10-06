@@ -64,7 +64,7 @@ Notes:
 
 ### Audit trail (opt-in)
 
-`--audit-trail-dir DIR` writes `DIR/<report_id>.json` per successful run (inputs, framework keys, model, SHA-256 of the prompts, timestamps, raw model response). Off by default. The company name is redacted unless `--audit-trail-include-company` is given; the raw response is stored verbatim and may still mention it.
+`--audit-trail-dir DIR` writes `DIR/<report_id>.json` per successful run (inputs, framework keys, provider, model, endpoint host and sanitised URL, call settings, knowledge-base version, attempts, token usage, stop reason, SHA-256 of the prompts, timestamps, raw model response). The endpoint is stored without credentials, query string or fragment. Off by default. The company name is redacted unless `--audit-trail-include-company` is given; the raw response is stored verbatim and may still mention it.
 
 ## What it does
 
@@ -80,7 +80,7 @@ Notes:
 
 ## Data flow
 
-Only the five engagement fields (company name, industry, country, listed status, audit topic) are sent to Anthropic's API, together with a system prompt built from the mapped frameworks. `--dry-run` sends nothing.
+Only the five engagement fields (company name, industry, country, listed status, audit topic) are sent to the configured model endpoint (Anthropic's API by default), together with a system prompt built from the mapped frameworks. `--dry-run` sends nothing.
 
 - `company_name` is sent **verbatim**. A real (non-dry-run) call prints a warning on stderr; it does not prompt or block. Suppress it with `--yes` (alias `--no-warn`) in non-interactive use.
 - `--anonymise` (or `--alias NAME`, which implies it) sends a placeholder (default `Entity A`) instead. The real name stays on your machine, and logs show only the alias. The `audit_input` in the report shown or saved locally has the real name restored, so treat that output as sensitive. Industry, country, listed status and audit topic are still sent.

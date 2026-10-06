@@ -13,7 +13,7 @@ from typing import Optional
 from pydantic import ValidationError
 
 from config import Config
-from saaf.core.audit_trail import AuditTrail, utc_now
+from saaf.core.audit_trail import AuditTrail, sanitize_endpoint, utc_now
 from saaf.core.llm import LLMError, create_client
 from saaf.core.mapper import FrameworkMapper, FrameworkMatch, MappingResult
 from saaf.core.models import DISCLAIMER, AuditInput, ComplianceReport
@@ -59,6 +59,9 @@ class ComplianceAgent:
     # Optional opt-in audit trail (see saaf/core/audit_trail.py); off by default.
     audit_trail: Optional[AuditTrail] = None
 
+    # Outcome of the most recent model call (attempts, token usage, stop reason)
+    _last_call: dict = {}
+
     def __init__(self, config: Config | None = None) -> None:
         self.config = config or Config()
         self.client = create_client(self.config)
@@ -99,6 +102,7 @@ class ComplianceAgent:
 
         # Step 3: Call the configured model
         started_at = utc_now()
+        self._last_call = {}
         raw_json = self._call_llm(system_prompt, user_message)
 
         # Step 4: Parse and validate
@@ -114,7 +118,16 @@ class ComplianceAgent:
                 report_id=report.report_id,
                 inputs=audit_input.model_dump(),
                 framework_keys=[m.key for m in mapping.framework_matches],
+                provider=self.config.provider,
                 model=self.config.model,
+                endpoint=getattr(self.client, "endpoint", None),
+                settings={
+                    "max_tokens": self.config.max_tokens,
+                    "max_retries": self.config.max_retries,
+                    "timeout_seconds": self.config.timeout_seconds,
+                },
+                kb_version=KB_VERSION,
+                call=self._last_call,
                 system_prompt=system_prompt,
                 user_message=user_message,
                 started_at=started_at,
@@ -147,8 +160,10 @@ class ComplianceAgent:
             if attempt:
                 log.warning("Retrying API call (attempt %d/%d)", attempt + 1, self.config.max_retries + 1)
 
-            log.info("Calling %s (provider=%s)  max_tokens=%d",
-                     self.config.model, self.config.provider, self.config.max_tokens)
+            _, endpoint_host = sanitize_endpoint(getattr(self.client, "endpoint", None))
+            log.info("Calling %s (provider=%s host=%s)  max_tokens=%d",
+                     self.config.model, self.config.provider, endpoint_host,
+                     self.config.max_tokens)
             t_start = time.monotonic()
             try:
                 response = self.client.complete(
@@ -166,6 +181,12 @@ class ComplianceAgent:
             log.info("API done in %.1fs  input=%s  output=%s  stop=%s",
                      time.monotonic() - t_start, response.input_tokens,
                      response.output_tokens, response.stop_reason)
+            self._last_call = {
+                "attempts": attempt + 1,
+                "input_tokens": response.input_tokens,
+                "output_tokens": response.output_tokens,
+                "stop_reason": response.stop_reason,
+            }
             return response.text
 
         raise ComplianceReportError(

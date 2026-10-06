@@ -103,6 +103,10 @@ class TestOpenAICompatibleClient(_ServerTestCase):
         self.assertEqual((resp.input_tokens, resp.output_tokens, resp.stop_reason),
                          (11, 22, "stop"))
 
+    def test_exposes_the_endpoint_it_calls(self):
+        client = OpenAICompatibleClient("", "m", 5, "http://localhost:11434/v1")
+        self.assertEqual(client.endpoint, "http://localhost:11434/v1/chat/completions")
+
     def test_trailing_slash_and_full_endpoint_url_both_work(self):
         server = self.serve(body=_completion())
         OpenAICompatibleClient("", "m", 5, server.url + "/v1/").complete("s", "u", 1)
@@ -220,6 +224,12 @@ class TestAnthropicClient(unittest.TestCase):
             AnthropicClient("k", "claude-x", 42, "https://gateway.example/anthropic")
         self.assertEqual(sdk.call_args.kwargs["timeout"], 42)
         self.assertEqual(sdk.call_args.kwargs["base_url"], "https://gateway.example/anthropic")
+
+    def test_exposes_the_endpoint_the_sdk_will_call(self):
+        with patch("anthropic.Anthropic") as sdk:
+            sdk.return_value.base_url = "https://api.anthropic.com"
+            client = AnthropicClient("k", "claude-x", 42)
+        self.assertEqual(client.endpoint, "https://api.anthropic.com")
 
     def test_base_url_omitted_when_not_set(self):
         with patch("anthropic.Anthropic") as sdk:

@@ -114,6 +114,37 @@ class TestAgentRunSuccess(_AgentTestCase):
 
 
 # ---------------------------------------------------------------------------
+# Audit trail records which provider / endpoint produced a report
+# ---------------------------------------------------------------------------
+
+class TestAgentAuditTrailMetadata(_AgentTestCase):
+
+    def test_record_names_provider_endpoint_settings_and_call_outcome(self):
+        import tempfile
+        from saaf.core.audit_trail import AuditTrail
+        self.client.endpoint = "https://llm.example.com/v1/chat/completions?api_key=SECRET"
+        self.client.complete.side_effect = [
+            _status_error(503),
+            _response(json.dumps(_report_dict())),
+        ]
+        with tempfile.TemporaryDirectory() as d:
+            self.agent.audit_trail = AuditTrail(Path(d))
+            report, _ = self.agent.run(_make_input())
+            text = (Path(d) / f"{report.report_id}.json").read_text(encoding="utf-8")
+        record = json.loads(text)
+
+        self.assertEqual(record["provider"], self.agent.config.provider)
+        self.assertEqual(record["model"], self.agent.config.model)
+        self.assertEqual(record["endpoint_host"], "llm.example.com")
+        self.assertNotIn("SECRET", text)
+        self.assertEqual(record["settings"]["max_tokens"], self.agent.config.max_tokens)
+        self.assertTrue(record["kb_version"])
+        self.assertEqual(record["call"]["attempts"], 2)
+        self.assertEqual(record["call"]["input_tokens"], 10)
+        self.assertEqual(record["call"]["stop_reason"], "end_turn")
+
+
+# ---------------------------------------------------------------------------
 # Provider-independence: the whole agent against a custom OpenAI-compatible endpoint
 # ---------------------------------------------------------------------------
 
