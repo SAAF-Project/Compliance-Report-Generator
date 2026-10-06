@@ -56,7 +56,7 @@ def run_interactive() -> AuditInput:
         get_args(Industry),
     )
 
-    country = Prompt.ask("[bold]Country / jurisdiction[/bold] (US, EU, UK, Australia, Singapore; e.g. Germany)")
+    country = Prompt.ask("[bold]Country / jurisdiction[/bold] (e.g. US, EU, UK, Australia, Singapore)")
 
     listed_status = _prompt_choice(
         "Listed status",
