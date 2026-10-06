@@ -115,3 +115,5 @@ class ComplianceReport(BaseModel):
             "compliance professionals to confirm regulatory obligations."
         )
     )
+    # Set by the agent after validation; never requested from the model.
+    warnings: list[str] = Field(default_factory=list)

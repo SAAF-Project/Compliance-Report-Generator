@@ -15,6 +15,7 @@ from pydantic import ValidationError
 from config import Config
 from saaf.core.mapper import FrameworkMapper, MappingResult
 from saaf.core.models import AuditInput, ComplianceReport
+from saaf.knowledge.regulations import jurisdiction_warning
 from saaf.prompts.system_prompt import build_system_prompt, build_user_message
 
 log = logging.getLogger("saaf.agent")
@@ -55,6 +56,10 @@ class ComplianceAgent:
                  len(mapping.framework_matches),
                  ", ".join(m.key for m in mapping.framework_matches))
 
+        warning = jurisdiction_warning(audit_input.country)
+        if warning:
+            log.warning(warning)
+
         # Step 2: Build prompts
         system_prompt = build_system_prompt(audit_input, mapping)
         user_message = build_user_message(audit_input, mapping)
@@ -66,6 +71,8 @@ class ComplianceAgent:
 
         # Step 4: Parse and validate
         report = self._parse_and_validate(raw_json, audit_input)
+        # Overwrite anything the model supplied: warnings are agent-generated only
+        report.warnings = [warning] if warning else []
         log.info("Report ready: id=%s  risk=%s  frameworks=%d  regulations=%d",
                  report.report_id,
                  report.gap_risk_summary.overall_risk_rating,

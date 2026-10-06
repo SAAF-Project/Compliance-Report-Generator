@@ -56,6 +56,7 @@ These describe the agent's own trustworthy behaviour, not the regulations it rep
 - Given any successful run, the rendered report and the JSON both contain the disclaimer text.
 - Given a model response that omits or rewrites `disclaimer`, the output still carries the standard disclaimer. **Limitation, stated honestly:** not guaranteed today. `disclaimer` is a model field with a default, so a model-supplied value would override it.
 - Given any run, the report does not state that the entity is compliant or non-compliant. **Limitation, stated honestly:** only enforced by prompt wording ("typical gaps for this profile"), not by a check.
+- Given a country that does not resolve to a known jurisdiction, the CLI prints a warning to stderr (also with `--dry-run`), the agent logs a warning, and the report (terminal and JSON `warnings` field) carries a visible note that coverage is generic. The warning is set by the agent after validation, so a model-supplied `warnings` value is overwritten. **Limitation, stated honestly:** this only signals the gap; coverage was not extended, and Canada, India and Japan resolve to known keys with minimal matrix entries and do not trigger the warning.
 
 **CO-4 — Data and secrets**
 - Given `ANTHROPIC_API_KEY` unset, a real run exits with a clear configuration error. `--dry-run` works without a key.
@@ -85,7 +86,7 @@ Findings do not use `outputs/schemas/finding-schema.json` today. The output is a
 - **Clause references are unverified.** `requirement_source` and `applicable_sections` are model-generated and not checked against any source text, so a plausible but wrong article number can pass validation.
 - **Disclaimer can be overridden** by the model, since it is part of the schema it fills.
 - **Knowledge base is hand-maintained and static.** There is no versioning, no review date per framework, and no process for regulatory change. Boundary cases (e.g. a fintech that may or may not be a credit institution under DORA) are listed as an open question in the plan and are not handled explicitly.
-- **Limited jurisdiction coverage.** The system prompt names US, EU, UK, Australia and Singapore. Other countries resolve to a generic jurisdiction and the output may be thin.
+- **Limited jurisdiction coverage (partly mitigated).** The system prompt names US, EU, UK, Australia and Singapore (now documented in the README). Other countries still resolve to a generic jurisdiction and the output may be thin, but the user is now warned in the CLI, log and report (see CO-3). Coverage itself is not extended, and the warning is not shown for Canada, India or Japan, which have only minimal coverage.
 - **Not mapped to `finding-schema.json`.** Output cannot be fed directly into other SAAF components.
 - **Real entity names are sent to a third-party API** with no warning or opt-out.
 - **No persistent audit trail** (see section 7).
@@ -108,6 +109,7 @@ Status is **Draft**. The test suite (`tests/test_saaf.py`, 496 lines, unittest) 
 | CO-2 #5 (API retry behaviour) | ☐ | No test |
 | CO-3 #1 (disclaimer shown) | ☐ | No test |
 | CO-3 #2–#3 | ☐ | Not implemented |
+| CO-3 #4 (unrecognised-jurisdiction warning) | ☑ | `python -m unittest discover -s tests` run in a fresh venv: 56 tests OK, including `TestJurisdictionWarning.*` (CLI stderr incl. `--dry-run`, agent log, report field, formatter, schema exclusion; agent run uses a stubbed model call, not a live API call) |
 | CO-4 #1 (missing key) | ☐ | Candidate: `TestCliDryRun.test_dry_run_no_api_key_needed` covers dry-run only |
 | CO-4 #2 (secret scan) | ☑ | Manual grep of tracked files, 2026-10-06, no matches |
 | CO-4 #3 | ☐ | Known limitation |
