@@ -71,8 +71,7 @@ def _build_framework_section(mapping: MappingResult) -> str:
         lines.append(f"Description: {match.description}")
         if match.relevant_domains:
             lines.append("Relevant control domains for this engagement:")
-            for d in match.relevant_domains:
-                lines.append(f"  - {d}")
+            lines.extend(f"  - {d}" for d in match.relevant_domains)
         lines.append("")
 
     return "\n".join(lines)
