@@ -2,6 +2,11 @@
 
 Identifies all applicable regulatory frameworks for a financial entity and produces a structured compliance overview to kick off an audit engagement.
 
+## Prerequisites
+
+- Python 3. CI runs the tests on Python 3.12 (`.github/workflows/tests.yml`). TODO(owner): state the minimum supported Python version.
+- An API key for the provider you use, from environment variables only: `ANTHROPIC_API_KEY` (default provider), `OPENAI_API_KEY`, or `SAAF_API_KEY` (see *Choosing a model or endpoint*). `--dry-run` needs no key. `.env` is git-ignored.
+
 ## How to run
 
 ```bash
@@ -12,7 +17,7 @@ python cli.py
 
 # Non-interactive mode
 python cli.py \
-  --company "Dutch National Bank" \
+  --company "Example Bank N.V." \
   --industry "Financial Services" \
   --country Netherlands \
   --listed-status Public \
@@ -128,13 +133,32 @@ Not covered yet (references are labelled `framework_not_covered`, not checked): 
 
 Updating the lists: an agent may refresh the data from the official sources, but only through a pull request that cites them. Run the scripts in `tools/clause_sources/` (stdlib only; see `common.py` for the data format), then `python3 -I tools/clause_sources/provenance_table.py` and put its table (`source`, `last_reviewed`) in the PR for a maintainer to check. `last_reviewed` in the data files is the retrieval date, not a maintainer's sign-off.
 
+## Limitations & human-review gate
+
+The report is **decision support for audit planning**, not an audit conclusion. An auditor must review it before using it in an engagement. Every report carries a disclaimer that the model cannot omit or rewrite (`DISCLAIMER` in `saaf/core/models.py`).
+
+- It maps frameworks to a profile. It does not assess the entity's actual compliance.
+- Clause references are written by the model and only checked for existence, never for meaning (see *Clause references*).
+- The knowledge base is hand-maintained; coverage outside the listed jurisdictions is thin (see *Supported jurisdictions*).
+- Only `claude-opus-4-6` has been used against a real model; other models are untested.
+- The full list of known gaps is in `AUDIT-CRITERIA.md` section 5.
+
+## Guardrails
+
+The agent (`cli.py`, `config.py`, `saaf/`) runs no shell commands. No command prohibited by SAAF's `regulatory/guardrails/allowed-commands.md` (`rm`, `sudo`, `curl`, `wget`, `ssh`, `scp`, `chmod`, `chown`, `cron`, runtime `pip install`) appears there. Its only outbound call is to the configured model endpoint. The maintenance scripts in `tools/clause_sources/` fetch official clause lists over HTTPS (`urllib`); they are run by hand, never by the agent.
+
 ## Audit criteria
 
 See [AUDIT-CRITERIA.md](AUDIT-CRITERIA.md) for control objectives, acceptance criteria, known gaps and observability.
 
 ## Related plan
 
-[Compliance Report Generator — Rohan Sobha](https://github.com/Iodine98/SAAF-Project/blob/main/plans/hackathon-2/rohan-sobha-compliance-report-generator.md)
+[Compliance Report Generator — Rohan Sobha](https://github.com/SAAF-Project/SAAF-Project/blob/main/plans/hackathon-2/rohan-sobha-compliance-report-generator.md) (in SAAF-Project; previously linked from a fork: [Iodine98/SAAF-Project](https://github.com/Iodine98/SAAF-Project/blob/main/plans/hackathon-2/rohan-sobha-compliance-report-generator.md))
+
+## Maintainer and licence
+
+- **Maintainer:** Rohan Sobha (see `AUDIT-CRITERIA.md`). TODO(owner): add a contact channel if one should be public.
+- **Licence:** TODO(owner): licence to be decided by Stichting SAAF.
 
 ## Part of SAAF Project
 
