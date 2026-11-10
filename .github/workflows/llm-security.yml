@@ -1,0 +1,104 @@
+name: LLM security (garak)
+
+# Opt-in and non-blocking: spends real model calls, so it runs only when the
+# llm-security label is applied. New pushes do not re-run it; re-apply the label.
+# Never change this to pull_request_target: that would expose the key to PR code.
+# See "LLM security check (opt-in)" in the README.
+
+on:
+  pull_request:
+    types: [labeled]
+    paths:
+      - "saaf/prompts/**"
+      - "saaf/core/agent.py"
+      - "saaf/core/llm/**"
+      - "saaf/core/models.py"
+
+concurrency:
+  # The label is part of the key: otherwise adding any other label to the PR
+  # would cancel a run that is in progress.
+  group: llm-security-${{ github.ref }}-${{ github.event.label.name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  garak:
+    if: >-
+      github.event.label.name == 'llm-security' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    # Longer than e2e-clauses.yml: up to 30 full report generations, one at a time
+    timeout-minutes: 90
+    env:
+      OUTPUT_DIR: garak-output
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check the API key is configured
+        env:
+          SAAF_API_KEY: ${{ secrets.GARAK_LLM_API_KEY }}
+        run: |
+          if [ -z "$SAAF_API_KEY" ]; then
+            echo "::error::Repository secret GARAK_LLM_API_KEY is not set."
+            exit 1
+          fi
+
+      # Its own venv: garak must not end up in requirements.txt
+      - name: Install garak
+        run: |
+          python -m venv .venv-garak
+          .venv-garak/bin/pip install --no-cache-dir "garak==0.17.1" -r requirements.txt
+
+      # garak exits 0 when probes find problems, so findings do not fail this step.
+      # LatentWhois is excluded because it ignores the prompt cap (168 prompts) and
+      # would use the whole budget before the probes that run after it.
+      - name: Run garak
+        env:
+          SAAF_API_KEY: ${{ secrets.GARAK_LLM_API_KEY }}
+          SAAF_GARAK_MAX_CALLS: "30"
+          SAAF_GARAK_OUTCOMES: ${{ env.OUTPUT_DIR }}/outcomes.jsonl
+          PYTHONPATH: .
+        run: |
+          mkdir -p "$OUTPUT_DIR"
+          .venv-garak/bin/garak \
+            --target_type function \
+            --target_name "tools.garak_target#generate" \
+            --spec "probes.latentinjection,-probes.latentinjection.LatentWhois,probes.promptinject" \
+            --config tools/garak_pr_check.yaml \
+            --report_prefix "$GITHUB_WORKSPACE/$OUTPUT_DIR/garak"
+
+      - name: Summarise results
+        if: always()
+        run: |
+          mkdir -p "$OUTPUT_DIR"
+          cp "$HOME/.local/share/garak/garak.log" "$OUTPUT_DIR/" 2>/dev/null || true
+          status=0
+          python tools/garak_summary.py \
+            --report "$OUTPUT_DIR/garak.report.jsonl" \
+            --outcomes "$OUTPUT_DIR/outcomes.jsonl" \
+            > "$OUTPUT_DIR/summary.md" || status=$?
+          cat "$OUTPUT_DIR/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      - name: Comment on the PR
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr comment "$PR_NUMBER" -R "$GITHUB_REPOSITORY" --body-file "$OUTPUT_DIR/summary.md"
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: garak-report
+          path: garak-output/

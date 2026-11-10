@@ -208,3 +208,5 @@ __marimo__/
 
 # CI test output
 test-results/
+garak-output/
+garak-outcomes.jsonl

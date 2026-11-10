@@ -175,3 +175,24 @@ python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 ```
 
 CI (`.github/workflows/tests.yml`) runs the same suite on every pull request and push to `main`, and posts a short test report as a PR comment and job summary. The suite makes no API calls.
+
+### LLM security check (opt-in)
+
+[garak](https://github.com/NVIDIA/garak) sends prompt-injection attempts through the real agent and real model, as the `company_name` input. It spends money, so it never runs by itself.
+
+**To run it:** apply the `llm-security` label to a pull request that changes `saaf/prompts/**`, `saaf/core/agent.py`, `saaf/core/llm/**` or `saaf/core/models.py`. New pushes do not re-run it; remove and re-apply the label. Pull requests from forks are skipped. It needs the `GARAK_LLM_API_KEY` repository secret, a dedicated key with a spending limit.
+
+**To read it:** the job posts a PR comment and job summary, and uploads the full report as the `garak-report` artifact. A failed job means the run itself broke (no key, a provider error, no results). Findings never fail it.
+
+- *Prompt outcomes* say how far each prompt got: rejected by input validation before any model call, rejected by the schema or grounding checks, or a complete report. Only the last two measure the model.
+- *Hit rate* is hits divided by evaluated responses, per probe and detector. Prompts with no model response are counted under *No output* and left out of the rate.
+
+**Limits**
+
+- At most 30 model calls per run (`SAAF_GARAK_MAX_CALLS`), with every retry layer off. Failed attempts count. Later prompts get no model call. Do not set garak's `parallel_attempts` or `parallel_requests`: the wrapper refuses to run in a worker process, because the counter is per process.
+- About two prompts per probe is a spot check, and model output varies between runs. Hit rates cannot be compared across models.
+- garak's detectors expect chat-style text, while this app returns JSON, so expect false positives and false negatives. The echoed input is removed before detection, but only where it is repeated verbatim.
+- It cannot see an injection that stays within the schema, or judge whether a citation is correct.
+- `latentinjection.LatentWhois` is excluded: it ignores the prompt cap (168 prompts) and would use the whole budget.
+- Input validation (#41) rejects multi-line or over-long values before any model call. Every prompt the current settings send is multi-line or over the length limit, so with that validation in place all of them are rejected and the check measures nothing. The summary says so when this happens.
+- garak measures resistance. It does not add any.

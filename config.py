@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from typing import Optional
 
 from saaf.core.llm import PROVIDERS, validate_base_url
 
@@ -27,6 +28,9 @@ class Config:
     max_tokens: int = 32000
     max_retries: int = 2
     timeout_seconds: int = 180
+    # Retries inside the Anthropic SDK, on top of max_retries. None keeps the SDK's
+    # default. Only tools/garak_target.py sets it, so that a call budget stays exact.
+    sdk_max_retries: Optional[int] = None
 
     def __post_init__(self):
         self.provider = (

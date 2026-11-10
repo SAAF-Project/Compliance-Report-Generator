@@ -1,0 +1,10 @@
+# garak settings for the opt-in PR check (.github/workflows/llm-security.yml).
+# garak 0.17.1 has no CLI flag for soft_probe_prompt_cap. It is only a soft limit:
+# the hard limit is SAAF_GARAK_MAX_CALLS in tools/garak_target.py.
+# Keep parallel_* off: the call budget is per process.
+system:
+  parallel_attempts: false
+  parallel_requests: false
+run:
+  generations: 1
+  soft_probe_prompt_cap: 2

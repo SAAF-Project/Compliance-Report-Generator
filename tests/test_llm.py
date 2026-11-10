@@ -256,6 +256,34 @@ class TestAnthropicClient(unittest.TestCase):
             client.complete("s", "u", 10)
         self.assertTrue(ctx.exception.retryable)
 
+    def test_sdk_retry_setting_not_passed_by_default(self):
+        with patch("anthropic.Anthropic") as sdk:
+            AnthropicClient("k", "claude-x", 42)
+        self.assertNotIn("max_retries", sdk.call_args.kwargs)
+
+    def test_create_client_forwards_sdk_retry_setting(self):
+        config = MagicMock(provider="anthropic", model="m", api_key="k", base_url="",
+                           timeout_seconds=7, sdk_max_retries=0)
+        with patch("anthropic.Anthropic") as sdk:
+            create_client(config)
+        self.assertEqual(sdk.call_args.kwargs["max_retries"], 0)
+
+    def test_sdk_retries_off_makes_one_real_request(self):
+        server = _Server(status=500, body={"error": {"type": "api_error", "message": "x"}})
+        self.addCleanup(server.close)
+        client = AnthropicClient("test-key", "claude-x", 5, server.url, sdk_max_retries=0)
+        with self.assertRaises(LLMError):
+            client.complete("s", "u", 10)
+        self.assertEqual(len(server.requests), 1)
+
+    def test_default_client_keeps_the_sdk_retries(self):
+        server = _Server(status=500, body={"error": {"type": "api_error", "message": "x"}})
+        self.addCleanup(server.close)
+        client = AnthropicClient("test-key", "claude-x", 5, server.url)
+        with self.assertRaises(LLMError):
+            client.complete("s", "u", 10)
+        self.assertEqual(len(server.requests), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

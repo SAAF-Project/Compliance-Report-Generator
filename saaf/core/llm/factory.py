@@ -18,6 +18,7 @@ def create_client(config) -> Union[AnthropicClient, OpenAICompatibleClient]:
             model=config.model,
             timeout=config.timeout_seconds,
             base_url=config.base_url,
+            sdk_max_retries=config.sdk_max_retries,
         )
     if config.provider == "openai":
         return OpenAICompatibleClient(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
 from saaf.core.llm.base import LLMError, LLMResponse
 
@@ -18,6 +19,7 @@ class AnthropicClient:
         model: str,
         timeout: float,
         base_url: str = "",
+        sdk_max_retries: Optional[int] = None,
     ) -> None:
         import anthropic  # lazy: only needed for this provider
 
@@ -26,6 +28,9 @@ class AnthropicClient:
         kwargs = {"api_key": api_key, "timeout": timeout}
         if base_url:
             kwargs["base_url"] = base_url
+        # None keeps the SDK's own retry default; only budgeted runs set this
+        if sdk_max_retries is not None:
+            kwargs["max_retries"] = sdk_max_retries
         self.client = anthropic.Anthropic(**kwargs)
         # The SDK also honours ANTHROPIC_BASE_URL, so record what it will really call
         self.endpoint = str(self.client.base_url)
