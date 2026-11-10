@@ -160,7 +160,7 @@ See [AUDIT-CRITERIA.md](AUDIT-CRITERIA.md) for control objectives, acceptance cr
 
 ## Maintainer and licence
 
-- **Maintainer:** Rohan Sobha (see `AUDIT-CRITERIA.md`). TODO(owner): add a contact channel if one should be public.
+- **Maintainer:** Rohan Sobha (see `AUDIT-CRITERIA.md`). Contact through: rohan@vital-dev.com
 - **Licence:** TODO(owner): licence to be decided by Stichting SAAF.
 
 ## Part of SAAF Project
