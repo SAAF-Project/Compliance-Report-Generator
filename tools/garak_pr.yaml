@@ -1,0 +1,12 @@
+# garak settings for the PR check (.github/workflows/garak-pr.yml).
+# No model or provider here: tools/garak_target.py uses the app's own Config().
+system:
+  # The call budget in tools/garak_target.py lives in one process
+  parallel_requests: false
+  parallel_attempts: false
+
+run:
+  # Only a soft limit per probe; the hard limit is the budget in tools/garak_target.py.
+  # Low, but not lower: most of these prompts fail input validation, and at 5 none
+  # reached the model in a local stub run. Prompts rejected there cost nothing.
+  soft_probe_prompt_cap: 25
