@@ -36,7 +36,6 @@ from __future__ import annotations
 import io
 import re
 import sys
-import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
 from collections import Counter
@@ -44,6 +43,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # needed under ``python -I``
 import common  # noqa: E402
+import egress  # noqa: E402
 from common import _IDENT, USER_AGENT, fetch, write_clause_file  # noqa: E402
 
 RETRIEVED_ON = "2026-10-06"
@@ -292,8 +292,7 @@ class RangeFile(io.RawIOBase):
 
     def __init__(self, url: str):
         self.url, self.pos = url, 0
-        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": USER_AGENT})
-        with urllib.request.urlopen(req, timeout=60) as r:
+        with egress.open_url(url, method="HEAD", headers={"User-Agent": USER_AGENT}, timeout=60) as r:
             self.size = int(r.headers["Content-Length"])
             self.etag = r.headers.get("ETag")
             self.last_modified = r.headers.get("Last-Modified")
@@ -311,9 +310,8 @@ class RangeFile(io.RawIOBase):
         n = min(len(b), self.size - self.pos)
         if n <= 0:
             return 0
-        req = urllib.request.Request(
-            self.url, headers={"User-Agent": USER_AGENT, "Range": f"bytes={self.pos}-{self.pos + n - 1}"})
-        with urllib.request.urlopen(req, timeout=120) as r:
+        headers = {"User-Agent": USER_AGENT, "Range": f"bytes={self.pos}-{self.pos + n - 1}"}
+        with egress.open_url(self.url, headers=headers, timeout=120) as r:
             data = r.read()
         b[: len(data)] = data
         self.pos += len(data)
