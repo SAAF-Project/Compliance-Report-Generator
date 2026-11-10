@@ -4,8 +4,8 @@ Identifies all applicable regulatory frameworks for a financial entity and produ
 
 ## Prerequisites
 
-- Python 3. CI runs the tests on Python 3.12 (`.github/workflows/tests.yml`). TODO(owner): state the minimum supported Python version.
-- An API key for the provider you use, from environment variables only: `ANTHROPIC_API_KEY` (default provider), `OPENAI_API_KEY`, or `SAAF_API_KEY` (see *Choosing a model or endpoint*). `--dry-run` needs no key. `.env` is git-ignored.
+- Python 3.9 or newer (the package does not import on 3.8). CI runs the tests on Python 3.12 only (`.github/workflows/tests.yml`).
+- An API key for the provider you use, from environment variables only: `ANTHROPIC_API_KEY` (default provider), `OPENAI_API_KEY`, or `SAAF_API_KEY` (see *Choosing a model or endpoint*). `--dry-run` needs no key, and neither does the `openai` provider with a custom endpoint (e.g. a local model). `.env` is git-ignored.
 
 ## How to run
 
@@ -135,17 +135,20 @@ Updating the lists: an agent may refresh the data from the official sources, but
 
 ## Limitations & human-review gate
 
-The report is **decision support for audit planning**, not an audit conclusion. An auditor must review it before using it in an engagement. Every report carries a disclaimer that the model cannot omit or rewrite (`DISCLAIMER` in `saaf/core/models.py`).
+The report is **decision support for audit planning**, not an audit conclusion. An auditor must review it before using it in an engagement. Every terminal and JSON report carries a disclaimer that the model cannot omit or rewrite (`DISCLAIMER` in `saaf/core/models.py`). The `--output findings` export does not include it.
 
 - It maps frameworks to a profile. It does not assess the entity's actual compliance.
 - Clause references are written by the model and only checked for existence, never for meaning (see *Clause references*).
 - The knowledge base is hand-maintained; coverage outside the listed jurisdictions is thin (see *Supported jurisdictions*).
-- Only `claude-opus-4-6` has been used against a real model; other models are untested.
+- No test or logged run uses a real model. Model calls in the tests are mocked or served by a local server, so output quality is not evaluated for any provider.
+- Real entity names are sent to the model endpoint, a third-party API by default. A warning and an opt-in alias exist, but anonymisation is not the default.
 - The full list of known gaps is in `AUDIT-CRITERIA.md` section 5.
 
 ## Guardrails
 
-The agent (`cli.py`, `config.py`, `saaf/`) runs no shell commands. No command prohibited by SAAF's `regulatory/guardrails/allowed-commands.md` (`rm`, `sudo`, `curl`, `wget`, `ssh`, `scp`, `chmod`, `chown`, `cron`, runtime `pip install`) appears there. Its only outbound call is to the configured model endpoint. The maintenance scripts in `tools/clause_sources/` fetch official clause lists over HTTPS (`urllib`); they are run by hand, never by the agent.
+The agent (`cli.py`, `config.py`, `saaf/`) runs no shell commands. No command prohibited by SAAF's `regulatory/guardrails/allowed-commands.md` (`rm`, `sudo`, `curl`, `wget`, `ssh`, `scp`, `chmod`, `chown`, `cron`, runtime `pip install`) appears there. Its only outbound call is to the configured model endpoint. The maintenance scripts in `tools/clause_sources/` are not part of this agent at runtime. A maintainer or a coding agent runs them to prepare a clause-list update (see *Clause references*), and the `Clause sources e2e` workflow runs them weekly and on relevant PRs.
+
+**Known limitation:** those scripts fetch official clause lists directly over HTTPS (`urllib`), not through an approved API connector. They do not yet meet the rule in `allowed-commands.md` that scripts make no outbound connections except through one. Tracked in #49.
 
 ## Audit criteria
 
