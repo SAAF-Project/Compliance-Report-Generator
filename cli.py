@@ -22,7 +22,7 @@ from saaf.core.audit_trail import AuditTrail
 from saaf.core.llm import PROVIDERS
 from saaf.core.models import AuditInput, AuditTopic, Industry, ListedStatus
 from saaf.knowledge.regulations import jurisdiction_warning
-from saaf.output.formatter import render_references_note, render_report
+from saaf.output.formatter import render_references_note, render_report, safe_markup
 
 console = Console()
 err_console = Console(stderr=True)
@@ -222,7 +222,7 @@ def main() -> int:
 
     warning = jurisdiction_warning(audit_input.country)
     if warning:
-        err_console.print(f"[yellow]Warning:[/yellow] {warning}")
+        err_console.print(f"[yellow]Warning:[/yellow] {safe_markup(warning)}")
 
     # Dry-run: just show the mapping
     if args.dry_run:
@@ -244,7 +244,7 @@ def main() -> int:
             base_url=args.base_url or "",
         )
     except EnvironmentError as e:
-        err_console.print(f"[red]Configuration error:[/red] {e}")
+        err_console.print(f"[red]Configuration error:[/red] {safe_markup(str(e))}")
         return 1
 
     # Data flow: the real company name only leaves the machine if not aliased
@@ -268,10 +268,10 @@ def main() -> int:
     try:
         report, mapping = agent.run(audit_input)
     except ComplianceReportError as e:
-        err_console.print(f"[red]Agent error:[/red] {e}")
+        err_console.print(f"[red]Agent error:[/red] {safe_markup(str(e))}")
         if e.raw_response:
             err_console.print("\n[dim]Raw response (first 500 chars):[/dim]")
-            err_console.print(e.raw_response[:500])
+            err_console.print(safe_markup(e.raw_response[:500]))
         return 1
 
     if anonymised:
@@ -288,7 +288,7 @@ def main() -> int:
         if args.output_file:
             with open(args.output_file, "w", encoding="utf-8") as f:
                 f.write(json_str)
-            console.print(f"[green]Report saved to:[/green] {args.output_file}")
+            console.print(f"[green]Report saved to:[/green] {safe_markup(args.output_file)}")
         else:
             print(json_str)
         # Keep stdout pure JSON; surface the note on stderr.
@@ -298,7 +298,7 @@ def main() -> int:
         if args.output_file:
             with open(args.output_file, "w", encoding="utf-8") as f:
                 f.write(report.model_dump_json(indent=2))
-            console.print(f"[dim]JSON also saved to: {args.output_file}[/dim]")
+            console.print(f"[dim]JSON also saved to: {safe_markup(args.output_file)}[/dim]")
 
     return 0
 
