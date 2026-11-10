@@ -148,7 +148,7 @@ The report is **decision support for audit planning**, not an audit conclusion. 
 
 The agent (`cli.py`, `config.py`, `saaf/`) runs no shell commands. No command prohibited by SAAF's `regulatory/guardrails/allowed-commands.md` (`rm`, `sudo`, `curl`, `wget`, `ssh`, `scp`, `chmod`, `chown`, `cron`, runtime `pip install`) appears there. Its only outbound call is to the configured model endpoint. The maintenance scripts in `tools/clause_sources/` are not part of this agent at runtime. A maintainer or a coding agent runs them to prepare a clause-list update (see *Clause references*), and the `Clause sources e2e` workflow runs them weekly and on relevant PRs.
 
-**Known limitation:** those scripts fetch official clause lists directly over HTTPS (`urllib`), not through an approved API connector. They do not yet meet the rule in `allowed-commands.md` that scripts make no outbound connections except through one. Tracked in #49.
+**Known limitation:** those scripts do not use an approved API connector, so they do not yet meet the rule in `allowed-commands.md` that scripts make no outbound connections except through one. All their fetching now goes through one module, `tools/clause_sources/egress.py`, which allows HTTPS only, to a fixed list of official hosts. A redirect to any other host is refused, and a plain-`http` redirect to a listed host is followed over HTTPS instead. That module has not been approved as a connector. Tracked in #49.
 
 ## Audit criteria
 
