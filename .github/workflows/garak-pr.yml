@@ -1,0 +1,142 @@
+name: garak PR check
+
+# Opt-in measurement of how the agent's model responds to injection attempts.
+# See "LLM security check" in README.md.
+#
+# SAME MODEL: garak always uses the same provider and model as the agent, through
+# the app's own configuration, and has no model setting of its own. It follows the
+# default if that changes. It covers only the agent's default setup, so a run with
+# a different --model is not covered.
+#
+# INACTIVE UNTIL A KEY EXISTS: this job does nothing until a dedicated Anthropic
+# Console API key with a spending limit is added as the SAAF_API_KEY repo secret.
+# A Claude subscription (Pro, Max or Team) does not include API usage, which is
+# billed separately through the Console.
+#
+# Never change this to pull_request_target: that would expose the key to untrusted
+# PR code. Findings never fail this job; infrastructure errors do.
+
+on:
+  pull_request:
+    types: [labeled]
+    paths:
+      - "saaf/prompts/**"
+      - "saaf/core/agent.py"
+      - "saaf/core/llm/**"
+      - "saaf/core/models.py"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  garak:
+    # Forks receive no secrets
+    if: >-
+      github.event.label.name == 'llm-security' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    # 30 model calls at the agent's 180 s client timeout, plus the install
+    timeout-minutes: 120
+    # On the job, not the workflow, and without cancelling: applying any other
+    # label also starts this workflow and must not cancel a run that has spent budget
+    concurrency:
+      group: garak-pr-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    env:
+      GARAK_OUTPUT: garak-output
+    steps:
+      - name: Check for the API key
+        id: key
+        env:
+          SAAF_API_KEY: ${{ secrets.SAAF_API_KEY }}
+        run: |
+          if [ -n "$SAAF_API_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::garak check skipped: the SAAF_API_KEY repo secret is not set."
+            {
+              echo "## garak injection check"
+              echo
+              echo "Skipped: the \`SAAF_API_KEY\` repo secret is not set, so no model was called."
+              echo "This check is inactive until a dedicated Anthropic Console API key with a"
+              echo "spending limit is added. See \"LLM security check\" in README.md."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.key.outputs.configured == 'true'
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        if: steps.key.outputs.configured == 'true'
+        with:
+          python-version: "3.12"
+
+      # garak is pinned here and kept out of the requirements files. Its own venv
+      # also needs the app's requirements, because it imports the app in-process.
+      - name: Install garak
+        if: steps.key.outputs.configured == 'true'
+        run: |
+          python -m venv .garak-venv
+          # CPU-only torch first: garak pulls torch in, and the default wheels are several GB
+          .garak-venv/bin/pip install --index-url https://download.pytorch.org/whl/cpu torch
+          .garak-venv/bin/pip install "garak==0.17.1" -r requirements.txt
+
+      - name: Run garak
+        if: steps.key.outputs.configured == 'true'
+        env:
+          SAAF_API_KEY: ${{ secrets.SAAF_API_KEY }}
+          SAAF_GARAK_OUTCOMES: ${{ env.GARAK_OUTPUT }}/outcomes.json
+        run: |
+          mkdir -p "$GARAK_OUTPUT"
+          .garak-venv/bin/python -m garak \
+            --target_type function \
+            --target_name "tools.garak_target#generate" \
+            --probes latentinjection,promptinject \
+            --generations 1 \
+            --config tools/garak_pr.yaml \
+            --report_prefix "$GITHUB_WORKSPACE/$GARAK_OUTPUT/pr"
+
+      # Fails the job when garak did not finish or a model call failed, never on hit rates
+      - name: Summarise results
+        if: ${{ !cancelled() && steps.key.outputs.configured == 'true' }}
+        run: |
+          python3 tools/garak_summary.py \
+            --report "$GARAK_OUTPUT/pr.report.jsonl" \
+            --hitlog "$GARAK_OUTPUT/pr.hitlog.jsonl" \
+            --outcomes "$GARAK_OUTPUT/outcomes.json" \
+            --output "$GARAK_OUTPUT/summary.md" || status=$?
+          cat "$GARAK_OUTPUT/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          exit "${status:-0}"
+
+      # One updated comment, found by its own marker: tests.yml's comment comes
+      # from the same bot account
+      - name: Post PR comment
+        if: ${{ !cancelled() && steps.key.outputs.configured == 'true' && hashFiles('garak-output/summary.md') != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          comments="repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments"
+          marker='<!-- garak-pr-check -->'
+          existing=$(gh api --paginate "$comments" --jq \
+            ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id" \
+            | tail -n 1)
+          if [ -n "$existing" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$existing" \
+              -F "body=@$GARAK_OUTPUT/summary.md" --silent
+          else
+            gh api -X POST "$comments" -F "body=@$GARAK_OUTPUT/summary.md" --silent
+          fi
+
+      # Holds probe text and raw model output, so it stays out of the PR comment
+      - name: Upload garak report
+        if: ${{ !cancelled() && steps.key.outputs.configured == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: garak-report
+          path: garak-output/
+          retention-days: 14

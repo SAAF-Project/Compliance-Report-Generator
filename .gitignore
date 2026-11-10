@@ -208,3 +208,7 @@ __marimo__/
 
 # CI test output
 test-results/
+
+# garak PR check output
+garak-output/
+.garak-venv/
