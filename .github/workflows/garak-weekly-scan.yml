@@ -1,0 +1,151 @@
+name: LLM security weekly scan (garak)
+
+# Spends real model calls: at most SAAF_GARAK_MAX_CALLS full report generations a run.
+# Findings never fail this workflow; a broken run does. A broken run neither stores a
+# baseline nor touches the tracking issue.
+# See "Weekly LLM security scan" in the README.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"   # weekly, Monday 06:17 UTC
+  workflow_dispatch:
+    inputs:
+      reset_baseline:
+        description: "Store this run as the new baseline and skip the comparison"
+        type: boolean
+        default: false
+
+concurrency:
+  # Not cancelled: a manual run must not throw away a paid run in progress
+  group: garak-weekly-scan
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    # Only main may set the baseline or write to the tracking issue
+    if: github.repository == 'SAAF-Project/Compliance-Report-Generator' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read   # to find and download the previous baseline artifact
+    # Just under GitHub's 6-hour limit for a hosted runner
+    timeout-minutes: 355
+    env:
+      OUTPUT_DIR: garak-output
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check the API key is configured
+        env:
+          SAAF_API_KEY: ${{ secrets.GARAK_LLM_API_KEY }}
+        run: |
+          if [ -z "$SAAF_API_KEY" ]; then
+            echo "::error::Repository secret GARAK_LLM_API_KEY is not set."
+            exit 1
+          fi
+
+      # Before any model call: if this fails, no money is spent
+      - name: Fetch the stored baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -m tools.garak_weekly_github fetch-baseline --dest baseline
+
+      # Its own venv: garak must not end up in requirements.txt
+      - name: Install garak
+        run: |
+          python -m venv .venv-garak
+          .venv-garak/bin/pip install --no-cache-dir -r tools/requirements-garak.txt -r requirements.txt
+
+      # garak exits 0 when probes find problems, so findings do not fail this step.
+      # Its own timeout leaves time for the summary and uploads below.
+      # LatentWhois (168 prompts) and AnsiRaw (58) ignore the prompt cap and are excluded
+      # to fit the budget; tools/garak_weekly_scan.yaml has the numbers.
+      - name: Run garak
+        timeout-minutes: 330
+        env:
+          SAAF_API_KEY: ${{ secrets.GARAK_LLM_API_KEY }}
+          SAAF_GARAK_MAX_CALLS: "300"
+          SAAF_GARAK_OUTCOMES: ${{ env.OUTPUT_DIR }}/outcomes.jsonl
+          PYTHONPATH: .
+          # With run.seed in the config, this makes every run send the same prompts:
+          # some latentinjection probes build prompts from a Python set.
+          PYTHONHASHSEED: "0"
+        run: |
+          mkdir -p "$OUTPUT_DIR"
+          .venv-garak/bin/garak \
+            --target_type function \
+            --target_name "tools.garak_target#generate" \
+            --spec "probes.latentinjection,-probes.latentinjection.LatentWhois,probes.promptinject,probes.ansiescape,-probes.ansiescape.AnsiRaw,probes.misleading" \
+            --config tools/garak_weekly_scan.yaml \
+            --report_prefix "$GITHUB_WORKSPACE/$OUTPUT_DIR/garak"
+
+      - name: Compare with the baseline
+        if: always()
+        env:
+          RESET_BASELINE: ${{ inputs.reset_baseline }}
+        run: |
+          mkdir -p "$OUTPUT_DIR"
+          cp "$HOME/.local/share/garak/garak.log" "$OUTPUT_DIR/" 2>/dev/null || true
+          reset=()
+          if [ "$RESET_BASELINE" = "true" ]; then reset=(--reset-baseline); fi
+          status=0
+          python -m tools.garak_regression \
+            --report "$OUTPUT_DIR/garak.report.jsonl" \
+            --outcomes "$OUTPUT_DIR/outcomes.jsonl" \
+            --baseline baseline/baseline.json \
+            --output-dir "$OUTPUT_DIR" \
+            "${reset[@]}" > /dev/null || status=$?
+          cat "$OUTPUT_DIR/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: garak-weekly-report
+          path: garak-output/
+
+      # Last and without always(): only a run that finished properly may keep a baseline.
+      # A run that measured nothing and had no earlier baseline has no file to upload.
+      - name: Upload baseline
+        uses: actions/upload-artifact@v4
+        with:
+          name: garak-weekly-baseline
+          path: garak-output/baseline.json
+          retention-days: 90
+          if-no-files-found: ignore
+
+  track:
+    needs: scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: garak-weekly-report
+          path: garak-output
+
+      - name: Open or update the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -m tools.garak_weekly_github track --comparison garak-output/comparison.json

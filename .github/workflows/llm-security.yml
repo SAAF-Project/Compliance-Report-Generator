@@ -56,7 +56,7 @@ jobs:
       - name: Install garak
         run: |
           python -m venv .venv-garak
-          .venv-garak/bin/pip install --no-cache-dir "garak==0.17.1" -r requirements.txt
+          .venv-garak/bin/pip install --no-cache-dir -r tools/requirements-garak.txt -r requirements.txt
 
       # garak exits 0 when probes find problems, so findings do not fail this step.
       # LatentWhois is excluded because it ignores the prompt cap (168 prompts) and

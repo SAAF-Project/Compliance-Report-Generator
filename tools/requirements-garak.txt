@@ -1,0 +1,2 @@
+# The garak version used by both LLM security workflows.
+garak==0.17.1
