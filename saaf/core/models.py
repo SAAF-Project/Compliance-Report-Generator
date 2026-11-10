@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import unicodedata
 import uuid
 from datetime import datetime, timezone
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field
+from pydantic_core import PydanticCustomError
 
 # ---------------------------------------------------------------------------
 # Input
@@ -38,10 +40,37 @@ AuditTopic = Literal[
 ]
 
 
+# Cc is the C0/C1 control characters (newline, tab, NEL, ...); Zl and Zp are the
+# Unicode line and paragraph separators. Cf is invisible formatting, including tag
+# characters that can carry hidden text to the model and bidi overrides. Deliberately
+# not an ASCII allowlist, and the zero-width (non-)joiner stay allowed: names in
+# non-Latin scripts can need them.
+_REJECTED_CATEGORIES = {"Cc", "Cf", "Zl", "Zp"}
+_ALLOWED_FORMAT_CHARACTERS = {"\u200c", "\u200d"}
+
+
+def _reject_control_characters(value: str) -> str:
+    if any(
+        unicodedata.category(char) in _REJECTED_CATEGORIES
+        and char not in _ALLOWED_FORMAT_CHARACTERS
+        for char in value
+    ):
+        raise PydanticCustomError(
+            "control_characters",
+            "must not contain control characters or invisible formatting characters, "
+            "such as newlines or tabs",
+        )
+    return value
+
+
+CompanyName = Annotated[str, Field(max_length=200), AfterValidator(_reject_control_characters)]
+Country = Annotated[str, Field(max_length=100), AfterValidator(_reject_control_characters)]
+
+
 class AuditInput(BaseModel):
-    company_name: str
+    company_name: CompanyName
     industry: Industry
-    country: str
+    country: Country
     listed_status: ListedStatus
     audit_topic: AuditTopic
 

@@ -13,14 +13,23 @@ import sys
 from pathlib import Path
 from typing import get_args
 
+from pydantic import TypeAdapter, ValidationError
 from rich.console import Console
+from rich.markup import escape
 from rich.prompt import Prompt
 
 from config import Config
 from saaf.core.agent import ComplianceAgent, ComplianceReportError
 from saaf.core.audit_trail import AuditTrail
 from saaf.core.llm import PROVIDERS
-from saaf.core.models import AuditInput, AuditTopic, Industry, ListedStatus
+from saaf.core.models import (
+    AuditInput,
+    AuditTopic,
+    CompanyName,
+    Country,
+    Industry,
+    ListedStatus,
+)
 from saaf.knowledge.regulations import jurisdiction_warning
 from saaf.output.formatter import render_references_note, render_report
 
@@ -28,6 +37,11 @@ console = Console()
 err_console = Console(stderr=True)
 
 DEFAULT_ALIAS = "Entity A"
+
+# Apply AuditInput's field rules to a single value (--alias, interactive answers).
+_COMPANY_NAME = TypeAdapter(CompanyName)
+_COUNTRY = TypeAdapter(Country)
+_FIELD_FLAGS = {"company_name": "--company", "country": "--country"}
 
 DATA_FLOW_WARNING = (
     "[yellow]Warning:[/yellow] company_name is sent verbatim to the configured LLM API. "
@@ -67,18 +81,34 @@ def _prompt_choice(prompt: str, choices: tuple[str, ...]) -> str:
         console.print("[red]Invalid choice, please try again.[/red]")
 
 
+def _validation_messages(error: ValidationError) -> str:
+    """Pydantic's messages only, so a rejected value is never echoed back."""
+    return escape("; ".join(e["msg"] for e in error.errors()))
+
+
+def _prompt_text(prompt: str, field: TypeAdapter) -> str:
+    while True:
+        try:
+            return field.validate_python(Prompt.ask(prompt))
+        except ValidationError as e:
+            console.print(f"[red]Invalid value: {_validation_messages(e)}. Please try again.[/red]")
+
+
 def run_interactive() -> AuditInput:
     console.print("\n[bold cyan]SAAF — Compliance Report Generator[/bold cyan]")
     console.print("Answer the following questions to generate your report.\n")
 
-    company_name = Prompt.ask("[bold]Company name[/bold]")
+    company_name = _prompt_text("[bold]Company name[/bold]", _COMPANY_NAME)
 
     industry = _prompt_choice(
         "Industry",
         get_args(Industry),
     )
 
-    country = Prompt.ask("[bold]Country / jurisdiction[/bold] (e.g. US, EU, UK, Australia, Singapore)")
+    country = _prompt_text(
+        "[bold]Country / jurisdiction[/bold] (e.g. US, EU, UK, Australia, Singapore)",
+        _COUNTRY,
+    )
 
     listed_status = _prompt_choice(
         "Listed status",
@@ -213,13 +243,34 @@ def main() -> int:
             )
             return 1
 
-        audit_input = AuditInput(
-            company_name=args.company,
-            industry=args.industry,
-            country=args.country,
-            listed_status=args.listed_status,
-            audit_topic=args.audit_topic,
-        )
+        try:
+            audit_input = AuditInput(
+                company_name=args.company,
+                industry=args.industry,
+                country=args.country,
+                listed_status=args.listed_status,
+                audit_topic=args.audit_topic,
+            )
+        except ValidationError as e:
+            for error in e.errors():
+                field = str(error["loc"][0])
+                err_console.print(
+                    f"[red]Invalid {_FIELD_FLAGS.get(field, field)}:[/red] {escape(error['msg'])}"
+                )
+            return 1
+
+    # apply_alias uses model_copy, which skips validators, so check the alias here.
+    # This is before the dry-run return so a bad alias fails the same way in both modes.
+    if args.alias is not None:
+        # An empty alias would otherwise turn anonymisation off and send the real name.
+        if not args.alias.strip():
+            err_console.print("[red]Invalid --alias:[/red] must not be empty")
+            return 1
+        try:
+            _COMPANY_NAME.validate_python(args.alias)
+        except ValidationError as e:
+            err_console.print(f"[red]Invalid --alias:[/red] {_validation_messages(e)}")
+            return 1
 
     warning = jurisdiction_warning(audit_input.country)
     if warning:
