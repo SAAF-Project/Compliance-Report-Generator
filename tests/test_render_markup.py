@@ -26,7 +26,7 @@ from test_agent_run import _make_input
 import cli
 from saaf.core.agent import ComplianceReportError
 from saaf.core.mapper import FrameworkMapper
-from saaf.core.models import ComplianceReport
+from saaf.core.models import AuditInput, ComplianceReport
 from saaf.output import formatter
 
 # (text the model writes, text the reader should see)
@@ -122,6 +122,9 @@ def _report_with(path: str, value: str) -> ComplianceReport:
     for key in parents:
         node = node[key]
     node[last] = value
+    # model_construct: AuditInput rejects control characters (#41), but the renderer
+    # must stay safe on its own if a value ever gets past that validation
+    data["audit_input"] = AuditInput.model_construct(**data["audit_input"])
     return ComplianceReport(**data)
 
 
