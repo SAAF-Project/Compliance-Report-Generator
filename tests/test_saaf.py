@@ -352,7 +352,11 @@ class TestSystemPromptBuilder(unittest.TestCase):
         ]
         for payload in payloads:
             with self.subTest(payload=payload):
-                audit_input = _make_input(company_name=payload, country=payload)
+                # model_construct: AuditInput now rejects newlines (#41), but the block must
+                # hold on its own if a value ever gets past that validation
+                audit_input = AuditInput.model_construct(
+                    **{**_make_input().model_dump(), "company_name": payload, "country": payload}
+                )
                 msg = build_user_message(audit_input, self.mapping)
                 data, _, end = self._engagement_block(msg)
                 self.assertEqual(data, {"company_name": payload, "country": payload})
