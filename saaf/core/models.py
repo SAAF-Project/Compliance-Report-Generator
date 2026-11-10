@@ -41,16 +41,24 @@ AuditTopic = Literal[
 
 
 # Cc is the C0/C1 control characters (newline, tab, NEL, ...); Zl and Zp are the
-# Unicode line and paragraph separators. Deliberately not an ASCII allowlist, and
-# not all of Cf: names in non-Latin scripts can need zero-width joiners.
-_REJECTED_CATEGORIES = {"Cc", "Zl", "Zp"}
+# Unicode line and paragraph separators. Cf is invisible formatting, including tag
+# characters that can carry hidden text to the model and bidi overrides. Deliberately
+# not an ASCII allowlist, and the zero-width (non-)joiner stay allowed: names in
+# non-Latin scripts can need them.
+_REJECTED_CATEGORIES = {"Cc", "Cf", "Zl", "Zp"}
+_ALLOWED_FORMAT_CHARACTERS = {"\u200c", "\u200d"}
 
 
 def _reject_control_characters(value: str) -> str:
-    if any(unicodedata.category(char) in _REJECTED_CATEGORIES for char in value):
+    if any(
+        unicodedata.category(char) in _REJECTED_CATEGORIES
+        and char not in _ALLOWED_FORMAT_CHARACTERS
+        for char in value
+    ):
         raise PydanticCustomError(
             "control_characters",
-            "must not contain control characters such as newlines or tabs",
+            "must not contain control characters or invisible formatting characters, "
+            "such as newlines or tabs",
         )
     return value
 

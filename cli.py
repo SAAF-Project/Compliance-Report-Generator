@@ -260,7 +260,11 @@ def main() -> int:
 
     # apply_alias uses model_copy, which skips validators, so check the alias here.
     # This is before the dry-run return so a bad alias fails the same way in both modes.
-    if args.alias:
+    if args.alias is not None:
+        # An empty alias would otherwise turn anonymisation off and send the real name.
+        if not args.alias.strip():
+            err_console.print("[red]Invalid --alias:[/red] must not be empty")
+            return 1
         try:
             _COMPANY_NAME.validate_python(args.alias)
         except ValidationError as e:
