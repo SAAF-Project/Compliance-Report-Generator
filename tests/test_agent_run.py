@@ -155,7 +155,8 @@ class TestAgentCustomEndpoint(unittest.TestCase):
         server = _Server(body=_completion(json.dumps(_report_dict())))
         self.addCleanup(server.close)
         with patch.dict("os.environ", {}, clear=True):
-            config = Config(provider="openai", model="local-model", base_url=server.url + "/v1")
+            config = Config(provider="openai", model="local-model", base_url=server.url + "/v1",
+                            allow_no_api_key=True)
         report, _ = ComplianceAgent(config).run(_make_input())
 
         self.assertEqual(report.gap_risk_summary.critical_gaps, ["Gap A"])

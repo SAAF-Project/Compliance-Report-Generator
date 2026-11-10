@@ -163,7 +163,12 @@ Examples:
                         help="Model name (env: SAAF_MODEL; default claude-opus-4-6 for anthropic)")
     parser.add_argument("--base-url", dest="base_url",
                         help="Custom API endpoint, e.g. http://localhost:11434/v1 "
-                             "(env: SAAF_BASE_URL)")
+                             "(env: SAAF_BASE_URL); pass an empty value to use the "
+                             "provider's own endpoint and ignore SAAF_BASE_URL")
+    parser.add_argument("--allow-no-api-key", dest="allow_no_api_key", action="store_true",
+                        help="Allow running without an API key against a custom endpoint "
+                             "(openai provider with a base URL only; env: "
+                             "SAAF_ALLOW_NO_API_KEY=1). A key that is set is still sent")
     parser.add_argument("--log-level", dest="log_level",
                         choices=["debug", "info", "warning", "error"], default="info",
                         help="Logging verbosity (default: info)")
@@ -239,9 +244,10 @@ def main() -> int:
     # Run the agent
     try:
         config = Config(
-            provider=args.provider or "",
-            model=args.model or "",
-            base_url=args.base_url or "",
+            provider=args.provider,
+            model=args.model,
+            base_url=args.base_url,
+            allow_no_api_key=args.allow_no_api_key,
         )
     except EnvironmentError as e:
         err_console.print(f"[red]Configuration error:[/red] {e}")

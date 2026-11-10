@@ -5,7 +5,7 @@ Identifies all applicable regulatory frameworks for a financial entity and produ
 ## Prerequisites
 
 - Python 3.9 or newer (the package does not import on 3.8). CI runs the tests on Python 3.12 only (`.github/workflows/tests.yml`).
-- An API key for the provider you use, from environment variables only: `ANTHROPIC_API_KEY` (default provider), `OPENAI_API_KEY`, or `SAAF_API_KEY` (see *Choosing a model or endpoint*). `--dry-run` needs no key, and neither does the `openai` provider with a custom endpoint (e.g. a local model). `.env` is git-ignored.
+- An API key for the provider you use, from environment variables only: `ANTHROPIC_API_KEY` (default provider), `OPENAI_API_KEY`, or `SAAF_API_KEY` (see *Choosing a model or endpoint*). `--dry-run` needs no key. The `openai` provider with a custom endpoint (e.g. a local model) can run without one if you opt in with `--allow-no-api-key` or `SAAF_ALLOW_NO_API_KEY=1`. `.env` is git-ignored.
 
 ## How to run
 
@@ -43,14 +43,14 @@ The agent is not tied to one model. Two providers are built in:
 | Provider | Use for | Key |
 |---|---|---|
 | `anthropic` (default) | Anthropic Messages API (default model `claude-opus-4-6`, adaptive thinking) | `ANTHROPIC_API_KEY` |
-| `openai` | Any OpenAI-compatible `/chat/completions` API: OpenAI, Azure-style gateways, vLLM, Ollama, LiteLLM, LM Studio | `OPENAI_API_KEY` (optional when `--base-url` is set) |
+| `openai` | Any OpenAI-compatible `/chat/completions` API: OpenAI, Azure-style gateways, vLLM, Ollama, LiteLLM, LM Studio | `OPENAI_API_KEY` (with `--base-url`, can be omitted using `--allow-no-api-key`) |
 
 ```bash
 # Default: Anthropic, key from ANTHROPIC_API_KEY
 python cli.py ...
 
-# Local model via Ollama (no key needed)
-python cli.py ... --provider openai --model llama3.1 --base-url http://localhost:11434/v1
+# Local model via Ollama (keyless, so opt in explicitly)
+python cli.py ... --provider openai --model llama3.1 --base-url http://localhost:11434/v1 --allow-no-api-key
 
 # Hosted OpenAI-compatible gateway
 export OPENAI_API_KEY=...
@@ -60,7 +60,11 @@ python cli.py ... --provider openai --model my-model --base-url https://llm.exam
 python cli.py ... --base-url https://gateway.example.com/anthropic
 ```
 
-Each setting can also come from the environment, with precedence **flag > environment > default**: `SAAF_PROVIDER`, `SAAF_MODEL`, `SAAF_BASE_URL`, and `SAAF_API_KEY` (overrides the provider-specific key variable). `--base-url` takes either a base URL (`.../v1`) or the full `.../chat/completions` URL.
+Each setting can also come from the environment, with precedence **flag > environment > default**: `SAAF_PROVIDER`, `SAAF_MODEL`, `SAAF_BASE_URL`, `SAAF_API_KEY` (overrides the provider-specific key variable) and `SAAF_ALLOW_NO_API_KEY`. `--base-url` takes either a base URL (`.../v1`) or the full `.../chat/completions` URL; `--base-url ""` uses the provider's own endpoint and ignores `SAAF_BASE_URL`. An empty or whitespace-only provider, model or key counts as not set, so the next source is used.
+
+Keys and custom endpoints:
+- A custom endpoint needs a key unless you opt in. `--allow-no-api-key` or `SAAF_ALLOW_NO_API_KEY=1` (also accepts `true`, `yes`, `on`) permits a missing key, for the `openai` provider with a base URL only. Anywhere else it has no effect and the key is still required.
+- A custom endpoint inherits your key: if `SAAF_API_KEY` or the provider's key variable (`OPENAI_API_KEY` or `ANTHROPIC_API_KEY`) is set, it is sent to that endpoint, even with `--allow-no-api-key`. To keep a key away from an endpoint you do not trust with it, unset those variables for that run.
 
 Notes:
 - The company name and engagement details are sent to whatever endpoint you configure (see `--anonymise`). Plain `http://` to a non-local host logs a warning, since the key and data would travel unencrypted. Redirects are never followed, so the key cannot be forwarded to another host.
