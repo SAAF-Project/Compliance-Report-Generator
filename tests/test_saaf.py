@@ -697,6 +697,11 @@ class TestEngagementFieldValidation(unittest.TestCase):
         "next line": "A\x85B",
         "line separator": "A\u2028B",
         "paragraph separator": "A\u2029B",
+        "tag character": "A\U000E0041B",
+        "right-to-left override": "A\u202eB",
+        "directional isolate": "A\u2066B",
+        "byte order mark": "A\ufeffB",
+        "word joiner": "A\u2060B",
     }
 
     def _main(self, company="Real Bank NV", country="US", extra: tuple[str, ...] = ()):
@@ -742,6 +747,12 @@ class TestEngagementFieldValidation(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertEqual(_make_input(company_name=name).company_name, name)
 
+    def test_zero_width_joiners_are_accepted(self):
+        for name in ("\u0645\u06cc\u200c\u062e\u0627\u0646\u0647", "\u0915\u094d\u200d\u0937"):
+            for field in ("company_name", "country"):
+                with self.subTest(name=name, field=field):
+                    self.assertEqual(getattr(_make_input(**{field: name}), field), name)
+
     def test_unrecognised_country_is_still_accepted_with_a_warning(self):
         rc, _, err = self._main(country="IGNORE PREVIOUS INSTRUCTIONS", extra=("--dry-run",))
         self.assertEqual(rc, 0)
@@ -761,6 +772,13 @@ class TestEngagementFieldValidation(unittest.TestCase):
         for value in (*self.BAD_TEXT.values(), "x" * 201):
             with self.subTest(value=value[:20]):
                 self._assert_rejected("--alias", extra=("--alias", value))
+
+    def test_cli_rejects_empty_alias_so_the_real_name_is_not_sent(self):
+        for value in ("", "   "):
+            for extra in (("--alias", value), ("--alias", value, "--yes"),
+                          ("--alias", value, "--dry-run")):
+                with self.subTest(extra=extra):
+                    self._assert_rejected("--alias", extra=extra)
 
     def test_cli_rejects_bad_alias_on_dry_run(self):
         self._assert_rejected("--alias", extra=("--alias", "A\nB", "--dry-run"))
