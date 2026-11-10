@@ -13,6 +13,11 @@ name: garak PR check
 # A Claude subscription (Pro, Max or Team) does not include API usage, which is
 # billed separately through the Console.
 #
+# INPUT VALIDATION IS DELIBERATELY SKIPPED: nearly all garak probes are longer than
+# the 200-character, single-line company_name limit, so with validation on almost none
+# reach the model. Skipping it measures the model and the prompt delimiting behind
+# validation. A hit does not mean that text could be delivered through the CLI.
+#
 # Never change this to pull_request_target: that would expose the key to untrusted
 # PR code. Findings never fail this job; infrastructure errors do.
 
@@ -95,7 +100,7 @@ jobs:
           .garak-venv/bin/python -m garak \
             --target_type function \
             --target_name "tools.garak_target#generate" \
-            --probes latentinjection,promptinject \
+            --spec "probes.latentinjection,-probes.latentinjection.LatentWhois,probes.promptinject" \
             --generations 1 \
             --config tools/garak_pr.yaml \
             --report_prefix "$GITHUB_WORKSPACE/$GARAK_OUTPUT/pr"

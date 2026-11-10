@@ -4,8 +4,14 @@ Target for garak's function generator (issue #46).
     python -m garak --target_type function --target_name tools.garak_target#generate ...
 
 Run from the repository root. garak's text goes in as ``company_name`` and passes
-through the agent's real validation, prompt and checks. The provider and model come
-from the app's own ``Config()``: this module has no model setting of its own.
+through the agent's real prompt and output checks. The provider and model come from
+the app's own ``Config()``: this module has no model setting of its own.
+
+Input validation is deliberately skipped here. ``company_name`` allows 200 characters
+on one line, and nearly all garak probes are longer or multi-line, so with validation
+on almost none reach the model (1 of about 443 in a local run). Skipping it measures
+the model and the prompt delimiting behind validation. A hit therefore does not mean
+that text could be delivered through the CLI. Validation has its own unit tests.
 """
 
 from __future__ import annotations
@@ -14,8 +20,6 @@ import json
 import os
 from pathlib import Path
 from typing import Optional
-
-from pydantic import ValidationError
 
 from config import Config
 from saaf.core.agent import ComplianceAgent, ComplianceReportError
@@ -26,14 +30,12 @@ MAX_MODEL_CALLS_ENV = "SAAF_GARAK_MAX_CALLS"  # for local tests only; the workfl
 OUTCOMES_PATH_ENV = "SAAF_GARAK_OUTCOMES"
 DEFAULT_OUTCOMES_PATH = "garak-output/outcomes.json"
 
-REJECTED_BY_INPUT_VALIDATION = "rejected_by_input_validation"
 REJECTED_BY_SCHEMA_OR_GROUNDING = "rejected_by_schema_or_grounding"
 COMPLETE_REPORT = "complete_report"
 BUDGET_EXHAUSTED = "budget_exhausted"
 # The call itself failed (bad key, outage, ...). Not a finding: the workflow fails on it.
 INFRASTRUCTURE_ERROR = "infrastructure_error"
 OUTCOMES = (
-    REJECTED_BY_INPUT_VALIDATION,
     REJECTED_BY_SCHEMA_OR_GROUNDING,
     COMPLETE_REPORT,
     BUDGET_EXHAUSTED,
@@ -47,6 +49,10 @@ _FIXED_FIELDS = {
     "listed_status": "Private",
     "audit_topic": "Cybersecurity",
 }
+
+# Output checks re-validate audit_input, which would reject the probe text and count
+# every long probe as a bad response. They get this valid stand-in instead.
+_VALID_INPUT = AuditInput(company_name="Synthetic Entity", **_FIXED_FIELDS)
 
 
 class _BudgetExhausted(Exception):
@@ -97,6 +103,9 @@ class GarakTarget:
 
         self._complete = client.complete
         client.complete = self._counted_complete
+
+        parse = self.agent._parse_and_validate
+        self.agent._parse_and_validate = lambda raw, _input: parse(raw, _VALID_INPUT)
         self._write_outcomes()
 
     def _counted_complete(self, system: str, user: str, max_tokens: int):
@@ -135,10 +144,8 @@ class GarakTarget:
     def call(self, prompt: str) -> list[Optional[str]]:
         # None means "no model output": garak does not score it. A placeholder
         # string would be scored and count as a pass.
-        try:
-            audit_input = AuditInput(company_name=prompt, **_FIXED_FIELDS)
-        except ValidationError:
-            return self._finish(REJECTED_BY_INPUT_VALIDATION, None)
+        # model_construct skips input validation on purpose: see the module docstring
+        audit_input = AuditInput.model_construct(company_name=prompt, **_FIXED_FIELDS)
 
         self._last_raw = None
         try:

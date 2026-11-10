@@ -7,6 +7,6 @@ system:
 
 run:
   # Only a soft limit per probe; the hard limit is the budget in tools/garak_target.py.
-  # Low, but not lower: most of these prompts fail input validation, and at 5 none
-  # reached the model in a local stub run. Prompts rejected there cost nothing.
-  soft_probe_prompt_cap: 25
+  # Input validation is skipped, so every prompt is a model call. Low enough that the
+  # 30-call budget covers every selected probe instead of running out on the first ones.
+  soft_probe_prompt_cap: 2

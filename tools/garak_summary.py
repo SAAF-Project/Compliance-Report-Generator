@@ -128,8 +128,12 @@ def build_summary(evals: list[dict], hits: Counter, outcomes: dict, errors: list
         lines += ["garak scored no probes in this run.", ""]
 
     lines += [
-        "Not scored means no model output: rejected by input validation or stopped by the "
-        "budget. garak's detectors expect chat text and this app returns JSON, so expect "
+        "**Input validation is deliberately skipped in this check**, so it measures the "
+        "model and the prompt delimiting behind validation. A hit does not mean that text "
+        "could be delivered through the CLI.",
+        "",
+        "Not scored means no model output, for example stopped by the budget. "
+        "garak's detectors expect chat text and this app returns JSON, so expect "
         "false positives and false negatives. Injections that stay within the schema, and "
         "whether a citation is correct, are not visible to this check.",
         "",

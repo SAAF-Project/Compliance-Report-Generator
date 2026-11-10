@@ -15,6 +15,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from pydantic import ValidationError
+
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -76,14 +78,12 @@ class TestBudget(_TargetTestCase):
         self.assertEqual(self._outcomes(), {"complete_report": 3, "budget_exhausted": 2})
         self.assertEqual(self._saved()["model_calls"], 3)
 
-    def test_input_rejections_do_not_use_the_budget(self):
+    def test_probes_validation_would_reject_still_use_the_budget(self):
         self._respond_with(json.dumps(_report_dict()))
         for _ in range(5):
-            self.assertEqual(garak_target.generate("line one\nline two"), [None])
-        self.assertEqual(self.real_complete.call_count, 0)
-        for _ in range(3):
-            garak_target.generate(ATTACK)
+            garak_target.generate("line one\nline two")
         self.assertEqual(self.real_complete.call_count, 3)
+        self.assertEqual(self._outcomes(), {"complete_report": 3, "budget_exhausted": 2})
 
     def test_failed_calls_use_the_budget(self):
         self.real_complete.side_effect = LLMError("boom", status_code=500, retryable=True)
@@ -99,10 +99,21 @@ class TestBudget(_TargetTestCase):
 
 class TestOutcomes(_TargetTestCase):
 
-    def test_over_long_text_is_rejected_without_truncating(self):
-        self.assertEqual(garak_target.generate("x" * 201), [None])
-        self.assertEqual(self.real_complete.call_count, 0)
-        self.assertEqual(self._outcomes(), {"rejected_by_input_validation": 1})
+    def test_input_validation_is_skipped_and_text_is_not_changed(self):
+        self._respond_with(json.dumps(_report_dict()))
+        for probe in ("x" * 201, "line one\nline two", "A\u202eB"):
+            with self.subTest(probe=probe[:12]):
+                with self.assertRaises(ValidationError):
+                    garak_target.AuditInput(company_name=probe, **garak_target._FIXED_FIELDS)
+                self.assertIsNotNone(garak_target.generate(probe)[0])
+                user_message = self.real_complete.call_args.args[1]
+                self.assertIn(json.dumps(probe, ensure_ascii=False), user_message)
+
+    def test_long_probe_with_a_valid_response_is_a_complete_report(self):
+        """Output checks re-validate audit_input; that must not count as a bad response."""
+        self._respond_with(json.dumps(_report_dict()))
+        garak_target.generate("line one\nline two " + "x" * 300)
+        self.assertEqual(self._outcomes(), {"complete_report": 1})
 
     def test_text_within_the_limit_reaches_the_agent_unchanged(self):
         self._respond_with(json.dumps(_report_dict()))
@@ -272,7 +283,7 @@ class TestSummary(unittest.TestCase):
                     "budget": 30,
                     "model_calls": 2,
                     "outcomes": {
-                        "rejected_by_input_validation": 4,
+                        "rejected_by_schema_or_grounding": 4,
                         "complete_report": 2,
                         "infrastructure_error": infrastructure_error,
                     },
@@ -327,7 +338,8 @@ class TestSummary(unittest.TestCase):
         self.assertTrue(summary.startswith(garak_summary.COMMENT_MARKER))
         self.assertIn("| 1 | 2 | 4 | 50% |", summary)
         self.assertIn("`some-model`", summary)
-        self.assertIn("`rejected_by_input_validation` | 4", summary)
+        self.assertIn("`rejected_by_schema_or_grounding` | 4", summary)
+        self.assertIn("Input validation is deliberately skipped", summary)
         self.assertNotIn(self.SECRET_TEXT, summary)
         self.assertNotIn("Warning", summary)
 
