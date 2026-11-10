@@ -84,7 +84,7 @@ For country `Netherlands` (also `NL`, `The Netherlands`, `Nederland`) with indus
 
 ## Data flow
 
-Only the five engagement fields (company name, industry, country, listed status, audit topic) are sent to the configured model endpoint (Anthropic's API by default), together with a system prompt built from the mapped frameworks. `--dry-run` sends nothing.
+Only the five engagement fields (company name, industry, country, listed status, audit topic) are sent to the configured model endpoint (Anthropic's API by default), together with a system prompt built from the mapped frameworks. The company name and country are sent as a single JSON block that the system prompt marks as untrusted data, which lowers the chance of prompt injection but does not rule it out. `--dry-run` sends nothing.
 
 - `company_name` is sent **verbatim**. A real (non-dry-run) call prints a warning on stderr; it does not prompt or block. Suppress it with `--yes` (alias `--no-warn`) in non-interactive use.
 - `--anonymise` (or `--alias NAME`, which implies it) sends a placeholder (default `Entity A`) instead. The real name stays on your machine, and logs show only the alias. The `audit_input` in the report shown or saved locally has the real name restored, so treat that output as sensitive. Industry, country, listed status and audit topic are still sent.
