@@ -1,0 +1,15 @@
+# garak settings for the weekly scan (.github/workflows/garak-weekly-scan.yml).
+# Measured with garak 0.17.1 and the spec in the workflow: 289 prompts.
+#   ansiescape.AnsiEscaped 51 and misleading.FalseAssertion 150 ignore the cap.
+#   The 11 other probes send 8 each, so the cap is what is left under 300.
+# soft_probe_prompt_cap is only a soft limit: the hard limit is SAAF_GARAK_MAX_CALLS
+# in tools/garak_target.py. Keep parallel_* off: the call budget is per process.
+# The seed, with PYTHONHASHSEED=0 in the workflow, makes every run send the same prompts,
+# so runs are comparable.
+system:
+  parallel_attempts: false
+  parallel_requests: false
+run:
+  generations: 1
+  soft_probe_prompt_cap: 8
+  seed: 20260105
