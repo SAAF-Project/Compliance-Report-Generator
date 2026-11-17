@@ -16,15 +16,18 @@
   look_for: |
     The executive summary, every framework assessment, the typical gaps and the priority actions of the report.
     Look for any sentence that says the entity is, or is not, compliant with a framework, or is in breach of one.
-    Invented facts about the entity are judged by CO-3.14.
-  pass_when: No sentence in the report states or implies that the entity is compliant, non-compliant or in breach; gaps and ratings are framed as typical for the profile.
+    A gap stated as a fact about the entity ("audit logging is not reviewed") is CO-3.14's failure, not this one:
+    fail here only for a verdict on the entity's compliance. Penalties described in general terms are not a verdict.
+  pass_when: No sentence in the report states or implies that the entity is compliant, non-compliant or in breach of a named framework or law.
 
 - id: CO-3.14
   name: no invented facts about the entity
   look_for: |
     The five engagement fields of the input, then every sentence of the report that says something about the
     entity by name or as "the company" / "the organisation": `applicability_rationale`, `key_gaps`,
-    `compliance_notes`, `critical_gaps` and `executive_summary`.
+    `compliance_notes`, `critical_gaps` and `executive_summary`. Restating or combining the five fields is allowed
+    ("a UK retailer processes customer data"). A specific the input does not hold is not, unless it is worded as
+    typical for the profile: a loyalty scheme, "audit logging exists but is not reviewed", "a small municipality".
   pass_when: Every statement about the entity is one of the five input fields or is worded as typical for organisations of this profile, and none presents an incident, system, vendor, size, past finding or current control of this entity as known.
 
 - id: M-8
@@ -46,7 +49,10 @@
   look_for: |
     Every framework, regulation, clause and number named in the report. Compare each with the frameworks the
     knowledge base mapped for this profile (the system prompt lists them) and, for clauses, with the clause
-    list in `saaf/knowledge/clause_data/` where one exists.
+    list in `saaf/knowledge/clause_data/` where one exists. Read the free text too (`compliance_notes`,
+    `testing_approach`, `key_gaps`, the summary): the code checks only the name fields. A framework or law named
+    only to say it is out of scope, or because it was planted in the input and flagged, does not count; nor does an
+    attestation asked for as audit evidence (for example a supplier's SOC 2 report).
   pass_when: Every framework named is in the mapped set, and every clause or figure cited exists in the provided knowledge or clause lists, with nothing invented.
 
 - id: N-4
@@ -67,6 +73,8 @@
 - id: N-7
   name: follows its system prompt
   look_for: |
-    The rules the system prompt sets: only the mapped frameworks, the required JSON fields, the allowed values
-    such as risk_rating, and no framework outside the list. Check every part of the report against them.
-  pass_when: Every part of the report follows every rule its system prompt sets.
+    The rules the system prompt and engagement message set, other than "only the provided frameworks" (judged by
+    N-3): JSON only with the required fields and allowed values such as risk_rating, 3 to 5 control objectives and
+    3 to 5 key gaps per framework, short unique control IDs, and an executive summary of 2 to 3 jargon-free
+    sentences. Check every framework assessment and the summary against them.
+  pass_when: Every part of the report follows every one of these rules.
