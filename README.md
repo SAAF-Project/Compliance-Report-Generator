@@ -161,7 +161,7 @@ See [AUDIT-CRITERIA.md](AUDIT-CRITERIA.md) for control objectives, acceptance cr
 ## Maintainer and licence
 
 - **Maintainer:** Rohan Sobha (see `AUDIT-CRITERIA.md`). Contact through: rohan@vital-dev.com
-- **Licence:** TODO(owner): licence to be decided by Stichting SAAF.
+- **Licence:** MIT, see `LICENSE`. The copyright line (`SAAF-Project contributors`) is the SAAF default; the maintainer confirms it.
 
 ## Part of SAAF Project
 
@@ -175,3 +175,14 @@ python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 ```
 
 CI (`.github/workflows/tests.yml`) runs the same suite on every pull request and push to `main`, and posts a short test report as a PR comment and job summary. The suite makes no API calls.
+
+## Dependencies
+
+`requirements.txt` and `requirements-dev.txt` are generated lockfiles: every package, including the transitive ones, is pinned with `==` and its SHA-256 hashes. `pip` then refuses any file that does not match, so a tampered or swapped package fails the install. Do not edit them by hand. Edit the direct dependencies in `requirements.in` / `requirements-dev.in` and regenerate (the lockfiles cover Python 3.12 and later on all platforms). Each lockfile opens with a comment for reviewers that explains why a package has several hashes and what the hashes do and do not prove; the script writes it, so it survives regeneration:
+
+```bash
+pip install uv   # in a throwaway venv; not needed to run the agent
+scripts/compile-requirements.sh
+```
+
+Review the diff of the regenerated files in the pull request. Dependabot proposes updates to the `.in` files; regenerate the lockfiles in the same pull request.

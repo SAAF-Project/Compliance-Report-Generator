@@ -1,0 +1,4 @@
+# Direct runtime dependencies. requirements.txt is generated from this file; do not edit it by hand.
+anthropic==2.9.0
+pydantic==2.14.3
+rich==15.0.0
