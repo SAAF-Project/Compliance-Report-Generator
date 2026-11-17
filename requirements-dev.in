@@ -1,0 +1,3 @@
+# Direct development dependencies. requirements-dev.txt is generated from this file; do not edit it by hand.
+-r requirements.in
+unittest-xml-reporting==4.0.0
