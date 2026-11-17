@@ -1,0 +1,928 @@
+{
+  "committee": "ISO/IEC JTC 1/SC 42",
+  "committee_title": "Artificial intelligence",
+  "catalogue": "https://www.iso.org/committee/6794475/x/catalogue/p/1/u/1/w/0/d/0",
+  "source": "https://isopublicstorageprod.blob.core.windows.net/opendata/_latest/iso_deliverables_metadata/json/iso_deliverables_metadata.jsonl",
+  "retrieved_on": "2026-11-17",
+  "retrieval_method": "tools/standards_sources/iso_sc42.py",
+  "standards": [
+    {
+      "reference": "ISO/IEC 12792:2025",
+      "title": "Information technology — Artificial intelligence (AI) — Transparency taxonomy of AI systems",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2025-11-11",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 20546:2019",
+      "title": "Information technology — Big data — Overview and vocabulary",
+      "type": "IS",
+      "stage": "90.60",
+      "status": "published",
+      "publication_date": "2019-02-28",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 20547-3:2020",
+      "title": "Information technology — Big data reference architecture — Part 3: Reference architecture",
+      "type": "IS",
+      "stage": "90.60",
+      "status": "published",
+      "publication_date": "2020-03-04",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 22989:2022",
+      "title": "Information technology — Artificial intelligence — Artificial intelligence concepts and terminology",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2022-07-19",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 23053:2022",
+      "title": "Framework for Artificial Intelligence (AI) Systems Using Machine Learning (ML)",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2022-06-20",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 23894:2023",
+      "title": "Information technology — Artificial intelligence — Guidance on risk management",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2023-02-06",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 24029-2:2023",
+      "title": "Artificial intelligence (AI) — Assessment of the robustness of neural networks — Part 2: Methodology for the use of formal methods",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2023-08-01",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 24668:2022",
+      "title": "Information technology — Artificial intelligence — Process management framework for big data analytics",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2022-11-17",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 25059:2023",
+      "title": "Software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Quality model for AI systems",
+      "type": "IS",
+      "stage": "90.92",
+      "status": "published",
+      "publication_date": "2023-06-28",
+      "under_revision": true
+    },
+    {
+      "reference": "ISO/IEC 38507:2022",
+      "title": "Information technology — Governance of IT — Governance implications of the use of artificial intelligence by organizations",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2022-04-08",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 42001:2023",
+      "title": "Information technology — Artificial intelligence — Management system",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2023-12-18",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 42005:2025",
+      "title": "Information technology — Artificial intelligence (AI) — AI system impact assessment",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2025-05-28",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 42006:2025",
+      "title": "Information technology — Artificial intelligence — Requirements for bodies providing audit and certification of artificial intelligence management systems",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2025-07-07",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 5259-1:2024",
+      "title": "Artificial intelligence — Data quality for analytics and machine learning (ML) — Part 1: Overview, terminology, and examples",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2024-07-02",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 5259-2:2024",
+      "title": "Artificial intelligence — Data quality for analytics and machine learning (ML) — Part 2: Data quality measures",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2024-11-05",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 5259-3:2024",
+      "title": "Artificial intelligence — Data quality for analytics and machine learning (ML) — Part 3: Data quality management requirements and guidelines",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2024-07-02",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 5259-4:2024",
+      "title": "Artificial intelligence — Data quality for analytics and machine learning (ML) — Part 4: Data quality process framework",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2024-07-15",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 5259-5:2025",
+      "title": "Artificial intelligence — Data quality for analytics and machine learning (ML) — Part 5: Data quality governance framework",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2025-02-12",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 5338:2023",
+      "title": "Information technology — Artificial intelligence — AI system life cycle processes",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2023-12-20",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 5339:2024",
+      "title": "Information technology — Artificial intelligence — Guidance for AI applications",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2024-01-15",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 5392:2024",
+      "title": "Information technology — Artificial intelligence — Reference architecture of knowledge engineering",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2024-03-15",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 8183:2023",
+      "title": "Information technology — Artificial intelligence — Data life cycle framework",
+      "type": "IS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2023-07-26",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 17903:2024",
+      "title": "Information technology — Artificial intelligence — Overview of machine learning computing devices",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2024-05-06",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 20226:2025",
+      "title": "Information technology — Artificial intelligence — Environmental sustainability aspects of AI systems",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2025-07-01",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 20547-1:2020",
+      "title": "Information technology — Big data reference architecture — Part 1: Framework and application process",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2020-08-20",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 20547-2:2018",
+      "title": "Information technology — Big data reference architecture — Part 2: Use cases and derived requirements",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2018-01-10",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 20547-5:2018",
+      "title": "Information technology — Big data reference architecture — Part 5: Standards roadmap",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2018-02-09",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 21221:2025",
+      "title": "Information technology — Artificial intelligence — Beneficial AI systems",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2025-09-05",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 24027:2021",
+      "title": "Information technology — Artificial intelligence (AI) — Bias in AI systems and AI aided decision making",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2021-11-05",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 24028:2020",
+      "title": "Information technology — Artificial intelligence — Overview of trustworthiness in artificial intelligence",
+      "type": "TR",
+      "stage": "90.92",
+      "status": "published",
+      "publication_date": "2020-05-28",
+      "under_revision": true
+    },
+    {
+      "reference": "ISO/IEC TR 24029-1:2021",
+      "title": "Artificial Intelligence (AI) — Assessment of the robustness of neural networks — Part 1: Overview",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2021-03-10",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 24030:2024",
+      "title": "Information technology — Artificial intelligence (AI) — Use cases",
+      "type": "TR",
+      "stage": "90.92",
+      "status": "published",
+      "publication_date": "2024-04-08",
+      "under_revision": true
+    },
+    {
+      "reference": "ISO/IEC TR 24368:2022",
+      "title": "Information technology — Artificial intelligence — Overview of ethical and societal concerns",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2022-08-19",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 24372:2021",
+      "title": "Information technology — Artificial intelligence (AI) — Overview of computational approaches for AI systems",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2021-12-07",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 42106:2026",
+      "title": "Information technology — Artificial intelligence (AI) — Overview of differentiated benchmarking of AI system quality characteristics",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2026-07-20",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 5259-6:2026",
+      "title": "Artificial intelligence — Data quality for analytics and machine learning (ML) — Part 6: Visualization framework for data quality",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2026-05-04",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 5469:2024",
+      "title": "Artificial intelligence — Functional safety and AI systems",
+      "type": "TR",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2024-01-08",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TS 12791:2024",
+      "title": "Information technology — Artificial intelligence — Treatment of unwanted bias in classification and regression machine learning tasks",
+      "type": "TS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2024-10-31",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TS 25058:2024",
+      "title": "Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Guidance for quality evaluation of artificial intelligence (AI) systems",
+      "type": "TS",
+      "stage": "90.92",
+      "status": "published",
+      "publication_date": "2024-01-24",
+      "under_revision": true
+    },
+    {
+      "reference": "ISO/IEC TS 42112:2026",
+      "title": "Information technology — Artificial intelligence — Guidance on machine learning model training efficiency optimization",
+      "type": "TS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2026-06-05",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TS 42119-2:2025",
+      "title": "Artificial intelligence — Testing of AI — Part 2: Overview of testing AI systems",
+      "type": "TS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2025-11-03",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TS 4213:2022",
+      "title": "Information technology — Artificial intelligence — Assessment of machine learning classification performance",
+      "type": "TS",
+      "stage": "90.92",
+      "status": "published",
+      "publication_date": "2022-10-13",
+      "under_revision": true
+    },
+    {
+      "reference": "ISO/IEC TS 6254:2025",
+      "title": "Information technology — Artificial intelligence — Objectives and approaches for explainability and interpretability of machine learning (ML) models and artificial intelligence (AI) systems",
+      "type": "TS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2025-09-05",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TS 8200:2024",
+      "title": "Information technology — Artificial intelligence — Controllability of automated artificial intelligence systems",
+      "type": "TS",
+      "stage": "60.60",
+      "status": "published",
+      "publication_date": "2024-04-10",
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/AWI TR 24492",
+      "title": "Standardization needs for the application of artificial intelligence in the financial services industry",
+      "type": "TR",
+      "stage": "10.99",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 22989:2022/CD Amd 2",
+      "title": "Information technology — Artificial intelligence — Artificial intelligence concepts and terminology — Amendment 2",
+      "type": "IS",
+      "stage": "30.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 22989:2022/FDAmd 1",
+      "title": "Information technology — Artificial intelligence — Artificial intelligence concepts and terminology — Amendment 1: Generative AI",
+      "type": "IS",
+      "stage": "50.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 23053:2022/FDAmd 1",
+      "title": "Framework for Artificial Intelligence (AI) Systems Using Machine Learning (ML) — Amendment 1: Generative AI",
+      "type": "IS",
+      "stage": "50.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 24970",
+      "title": "Artificial intelligence — AI system logging",
+      "type": "IS",
+      "stage": "60.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC 42105",
+      "title": "Information technology — Artificial intelligence — Guidance for human oversight of AI systems",
+      "type": "IS",
+      "stage": "60.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI 22989-2",
+      "title": "Artificial intelligence — Concepts and terminology — Part 2: Healthcare",
+      "type": "IS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI 25058",
+      "title": "Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Measurement and guidance for quality evaluation of AI systems",
+      "type": "IS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI 25623",
+      "title": "Artificial intelligence — Machine learning (ML) model description framework",
+      "type": "IS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI 25880",
+      "title": "Artificial intelligence — Requirements and guidance for the organizational implementation of human-machine teaming",
+      "type": "IS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI 26582",
+      "title": "Artificial intelligence — Conformity assessment for the functional correctness of an AI system",
+      "type": "IS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI 26741",
+      "title": "Information technology — Artificial intelligence — Framework for describing AI systems as object of conformity assessment",
+      "type": "IS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI 42003",
+      "title": "Information technology — Artificial intelligence — Guidance on the implementation of ISO/IEC 42001",
+      "type": "IS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TR 24028",
+      "title": "Information technology — Artificial intelligence — Trustworthiness characteristics of AI systems",
+      "type": "TR",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TR 27258",
+      "title": "Information technology — Artificial intelligence —Interactions in multi-agent AI systems",
+      "type": "TR",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TR 27259",
+      "title": "Information technology — Artificial intelligence — Taxonomy of misuse patterns in AI applications",
+      "type": "TR",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TR 27260",
+      "title": "Information technology — Artificial intelligence — Standardization landscape for physical AI",
+      "type": "TR",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TS 25223",
+      "title": "Information technology — Artificial intelligence — Guidance and requirements for uncertainty quantification in AI systems",
+      "type": "TS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TS 25566",
+      "title": "Terminology and concepts for domain engineering of AI systems",
+      "type": "TS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TS 25569",
+      "title": "Artificial Intelligence — Implementation guidance on de-identification of data used in Machine Learning (ML)",
+      "type": "TS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TS 25864",
+      "title": "Information technology — Artificial Intelligence (AI) — Resilience assessment of AI systems",
+      "type": "TS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TS 26312",
+      "title": "Information technology — Artificial intelligence — Identification and treatment of unwanted bias in AI by healthcare",
+      "type": "TS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TS 26320",
+      "title": "Artificial intelligence — Corpus development and maintenance for natural language processing systems",
+      "type": "TS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TS 42119-7",
+      "title": "Artificial intelligence — Testing and evaluation — Part 7: Red teaming",
+      "type": "TS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC AWI TS 42119-8",
+      "title": "Artificial intelligence — Testing and evaluation — Part 8: Prompt-based text-to-text benchmarking of AI models and AI systems",
+      "type": "TS",
+      "stage": "20.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD 25589",
+      "title": "Information technology — Artificial intelligence — Framework for human-machine teaming",
+      "type": "IS",
+      "stage": "30.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD 25590",
+      "title": "Information technology — Artificial intelligence — Guidance for output data quality of generative AI applications",
+      "type": "IS",
+      "stage": "30.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD 25704",
+      "title": "Artificial intelligence — Process assessment — Process assessment model for AI system life cycle processes",
+      "type": "IS",
+      "stage": "30.20",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD 25870",
+      "title": "Information technology — Artificial intelligence — Data elements for reporting AI system incidents",
+      "type": "IS",
+      "stage": "30.20",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD 25872-1",
+      "title": "Artificial intelligence — Knowledge enhancement for pretrained machine learning models — Part 1: Framework",
+      "type": "IS",
+      "stage": "30.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD TR 23281",
+      "title": "Artificial intelligence — Overview of AI tasks and functionalities related to natural language processing",
+      "type": "TR",
+      "stage": "30.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD TR 24030",
+      "title": "Information technology — Artificial intelligence (AI) — Use cases",
+      "type": "TR",
+      "stage": "30.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD TR 25523",
+      "title": "Information technology — Artificial intelligence — Overview of data profiles for analytics and machine learning (ML)",
+      "type": "TR",
+      "stage": "30.99",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD TR 42109",
+      "title": "Information technology — Artificial intelligence — Use cases of human-machine teaming",
+      "type": "TR",
+      "stage": "30.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD TS 22440-1.2",
+      "title": "Artificial intelligence — Functional safety and AI systems — Part 1: Requirements",
+      "type": "TS",
+      "stage": "30.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD TS 22440-2.2",
+      "title": "Artificial intelligence — Functional safety and AI systems — Part 2: Guidance",
+      "type": "TS",
+      "stage": "30.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD TS 22440-3",
+      "title": "Artificial intelligence — Functional safety and AI systems — Part 3: Examples of application",
+      "type": "TS",
+      "stage": "30.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD TS 25258",
+      "title": "Information technology — Artificial intelligence — Hybrid AI inference framework for AI systems",
+      "type": "TS",
+      "stage": "30.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD TS 25571",
+      "title": "Artificial Intelligence — Example template for documenting ethical issues of an AI system",
+      "type": "TS",
+      "stage": "30.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC CD TS 42111",
+      "title": "Information technology — Artificial intelligence — Guidance on lightweight AI systems",
+      "type": "TS",
+      "stage": "30.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC DIS 23282",
+      "title": "Artificial Intelligence — Evaluation methods for accurate natural language processing systems",
+      "type": "IS",
+      "stage": "40.20",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC DIS 25029",
+      "title": "Artificial intelligence — AI-enhanced nudging",
+      "type": "IS",
+      "stage": "40.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC DIS 42007",
+      "title": "Information technology — Artificial intelligence — High-level framework and guidance for the development of conformity assessment schemes for AI systems",
+      "type": "IS",
+      "stage": "40.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC DIS 42102",
+      "title": "Information technology — Artificial intelligence — Framework for characterizing AI system methods and capabilities",
+      "type": "IS",
+      "stage": "40.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC DIS 4213",
+      "title": "Information technology — Artificial Intelligence — Performance measurement for AI classification, regression, clustering and recommendation tasks",
+      "type": "IS",
+      "stage": "40.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC DTR 42103",
+      "title": "Information technology — Artificial intelligence — Overview of synthetic data in the context of AI systems",
+      "type": "TR",
+      "stage": "50.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC DTS 25568",
+      "title": "Information technology — Artificial Intelligence — Guidance on addressing risks in generative AI systems",
+      "type": "TS",
+      "stage": "50.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC FDIS 24029-3",
+      "title": "Artificial intelligence (AI) — Assessment of the robustness of neural networks — Part 3: Methodology for the use of statistical methods",
+      "type": "IS",
+      "stage": "50.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC FDIS 25059",
+      "title": "Software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Quality models for AI systems",
+      "type": "IS",
+      "stage": "50.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC NP 42117",
+      "title": "Artificial intelligence — Trustworthiness Fact Labels — Part 1: Principles and general requirements on trustworthiness fact statements and programmes for AI systems and models",
+      "type": "IS",
+      "stage": "10.20",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC NP TS 26200.2",
+      "title": "Artificial intelligence — Quality model and assessment framework for retrieval-augmented generation systems",
+      "type": "TS",
+      "stage": "10.20",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC NP TS 27236",
+      "title": "Information Technology — Artificial Intelligence — Taxonomy of safety for AI systems",
+      "type": "TS",
+      "stage": "10.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC NP TS 27254",
+      "title": "Information technology — Artificial intelligence — Measurement and reporting of context-dependentdifferential outcomes related to fairness",
+      "type": "TS",
+      "stage": "10.20",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TR 18988",
+      "title": "Artificial intelligence — Application of AI technologies in health informatics",
+      "type": "TR",
+      "stage": "60.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TS 22443",
+      "title": "Information technology — Artificial intelligence — Guidance on addressing societal concerns and ethical considerations",
+      "type": "TS",
+      "stage": "60.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC TS 42119-3",
+      "title": "Artificial intelligence — Testing of AI — Part 3: Verification and validation analysis of AI systems",
+      "type": "TS",
+      "stage": "60.00",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC WD TS 25570",
+      "title": "Information Technology — Artificial Intelligence — Reliability assessment of AI systems",
+      "type": "TS",
+      "stage": "20.60",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    },
+    {
+      "reference": "ISO/IEC/IEEE DIS 42703",
+      "title": "Artificial intelligence — Standard for algorithmic bias considerations",
+      "type": "IS",
+      "stage": "40.99",
+      "status": "under development",
+      "publication_date": null,
+      "under_revision": false
+    }
+  ]
+}

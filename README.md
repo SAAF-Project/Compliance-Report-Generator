@@ -86,6 +86,10 @@ For country `Netherlands` (also `NL`, `The Netherlands`, `Nederland`) with indus
 
 With audit topic `AI Governance`, the mapping adds the **EU AI Act (Regulation (EU) 2024/1689)** for any jurisdiction, because the Act reaches providers and deployers outside the EU whose AI output is used in the EU. Each high-risk requirement (Arts. 9–15 and 17) is listed with the CEN-CENELEC JTC 21 standards that support it, their stage and whether they are cited in the Official Journal. Only a cited standard (as of 2026-11-17 only EN 18286, quality management system) gives a presumption of conformity; the others are drafts. The mapping follows the [AI Act standards map](https://ai-act-standards.com/) and lives in `AI_ACT_STANDARDS` / `AI_ACT_STANDARDS_MAPPING` in `saaf/knowledge/frameworks.py`, with its review date in `AI_ACT_STANDARDS_REVIEWED`. Standards move through stages quickly, so re-check it before relying on a stage. The mapping does not decide whether a system is high-risk (Art. 6); that needs a separate assessment.
 
+### ISO/IEC AI standards (SC 42)
+
+With audit topic `AI Governance`, the mapping also adds the catalogue of **ISO/IEC JTC 1/SC 42 (Artificial intelligence)** for any jurisdiction and industry. That includes ISO/IEC 42001 (AI management system), 23894 (AI risk management), 42005 (AI system impact assessment) and the 5259 data quality series. Every published standard and every project under development is passed to the prompt with its ISO stage, so the agent can tell a published standard from a draft. As retrieved on 2026-11-17 there were 102 items: 44 published and 58 under development. The catalogue lives in `saaf/knowledge/standards_data/ISO_IEC_SC42.json` and holds only references, titles and stages, not the content of the standards. Regenerate it from ISO Open Data with `python -I tools/standards_sources/iso_sc42.py` and review the diff in a pull request. The standards themselves are paywalled, so clause references to them are not checked.
+
 ## Input / output
 
 - **Input**: company name, industry (e.g. `Financial Services`, `Healthcare`), country/jurisdiction, listed status (`Public` / `Private` / `Government`), audit topic (e.g. `Cybersecurity`, `Data Privacy`, `Financial Reporting`, `AI Governance`)
@@ -133,7 +137,7 @@ Granularity is the most specific level an auditor can test against without losin
 | NIST_800_53 | SP 800-53 Rev 5 | control and enhancement; withdrawn controls excluded |
 | CCPA_CPRA | Cal. Civ. Code 1798.100-1798.199.100 | section (CPPA regulations out of scope) |
 
-Not covered yet (references are labelled `framework_not_covered`, not checked): ISO 27001, COBIT, ISO 22301, ISO 31000, PDPA (SG), SOX, COSO, HITRUST CSF, PCI DSS, SOC 2, CSA CCM, NERC CIP, CMMC, APRA CPS 234, AU Privacy Act, FATF AML, CSRD/ESRS, GRI, TCFD. Several are paywalled (ISO, PCI DSS, HITRUST, COBIT).
+Not covered yet (references are labelled `framework_not_covered`, not checked): ISO 27001, COBIT, ISO 22301, ISO 31000, PDPA (SG), SOX, COSO, HITRUST CSF, PCI DSS, SOC 2, CSA CCM, NERC CIP, CMMC, APRA CPS 234, AU Privacy Act, FATF AML, CSRD/ESRS, GRI, TCFD, the ISO/IEC SC 42 AI standards. Several are paywalled (ISO, PCI DSS, HITRUST, COBIT).
 
 Updating the lists: an agent may refresh the data from the official sources, but only through a pull request that cites them. Run the scripts in `tools/clause_sources/` (stdlib only; see `common.py` for the data format), then `python3 -I tools/clause_sources/provenance_table.py` and put its table (`source`, `last_reviewed`) in the PR for a maintainer to check. `last_reviewed` in the data files is the retrieval date, not a maintainer's sign-off.
 
