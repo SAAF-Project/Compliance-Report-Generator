@@ -8,7 +8,7 @@
 >
 > **Evidence boundary.** No live-model execution evidence is included in this assessment. The automated suite uses mocks, stubs, local servers, and dry runs. Any historical Claude usage is outside the verified evidence set.
 >
-> **Branch note.** This document covers `main` at the commit above. Open PRs #50, #51, #53, #54 and #63 change behaviour or tests described here. None of them is merged at this commit, so none of their changes counts as evidence.
+> **Branch note.** This document covers `main` at the commit above. Open PRs #50, #51, #53, #54 and #63 change behaviour or tests described here. None of them is merged at this commit, so none of their changes counts as evidence. PR #51 has since merged (`b114bb9`): `_parse_and_validate` now always overwrites `audit_input` with the trusted input and logs a warning when the model's value differs, covered by `TestAuditInputAgentOwned.*` and `TestEntityNameDataFlow.test_anonymised_run_ignores_model_audit_input_and_restores_real_name`. This assessment has not been re-run against that commit, so CO5-AC10 below still reflects `311496a`.
 
 ---
 
