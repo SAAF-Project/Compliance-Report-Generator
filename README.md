@@ -178,12 +178,11 @@ CI (`.github/workflows/tests.yml`) runs the same suite on every pull request and
 
 ## Dependencies
 
-`requirements.txt` and `requirements-dev.txt` are generated lockfiles: every package, including the transitive ones, is pinned with `==` and its SHA-256 hashes. `pip` then refuses any file that does not match, so a tampered or swapped package fails the install. Do not edit them by hand. Edit the direct dependencies in `requirements.in` / `requirements-dev.in` and regenerate (the lockfiles cover Python 3.12 and later on all platforms):
+`requirements.txt` and `requirements-dev.txt` are generated lockfiles: every package, including the transitive ones, is pinned with `==` and its SHA-256 hashes. `pip` then refuses any file that does not match, so a tampered or swapped package fails the install. Do not edit them by hand. Edit the direct dependencies in `requirements.in` / `requirements-dev.in` and regenerate (the lockfiles cover Python 3.12 and later on all platforms). Each lockfile opens with a comment for reviewers that explains why a package has several hashes and what the hashes do and do not prove; the script writes it, so it survives regeneration:
 
 ```bash
 pip install uv   # in a throwaway venv; not needed to run the agent
-uv pip compile requirements.in --universal --python-version 3.12 --generate-hashes -o requirements.txt
-uv pip compile requirements-dev.in --universal --python-version 3.12 --generate-hashes -o requirements-dev.txt
+scripts/compile-requirements.sh
 ```
 
 Review the diff of the regenerated files in the pull request. Dependabot proposes updates to the `.in` files; regenerate the lockfiles in the same pull request.
