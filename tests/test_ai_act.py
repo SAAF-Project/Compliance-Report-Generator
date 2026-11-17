@@ -109,7 +109,8 @@ class TestRegistryEntry(unittest.TestCase):
 
     def test_provenance(self):
         self.assertEqual(self.entry["source"], "https://eur-lex.europa.eu/eli/reg/2024/1689/oj")
-        self.assertEqual(self.entry["last_reviewed"], AI_ACT_STANDARDS_REVIEWED)
+        # No maintainer sign-off yet; the mapping's retrieval date is kept separately
+        self.assertIsNone(self.entry["last_reviewed"])
         date.fromisoformat(AI_ACT_STANDARDS_REVIEWED)
 
     def test_all_domains_reach_the_prompt(self):

@@ -817,10 +817,11 @@ _FRAMEWORK_METADATA: dict[str, dict] = {
         "source": "https://zoek.officielebekendmakingen.nl/stcrt-2026-7416-n1.html",
         "last_reviewed": "2026-10-06",
     },
-    # Standards mapping checked against ai-act-standards.com on 2026-11-17 (issue #57)
+    # Not yet reviewed by a maintainer (issue #57); the date the standards
+    # mapping was retrieved is AI_ACT_STANDARDS_REVIEWED below
     "EU_AI_ACT": {
         "source": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
-        "last_reviewed": "2026-11-17",
+        "last_reviewed": None,
     },
 }
 
