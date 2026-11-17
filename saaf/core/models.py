@@ -35,6 +35,7 @@ AuditTopic = Literal[
     "Anti-Money Laundering",
     "ESG & Sustainability",
     "Operational Risk",
+    "AI Governance",
 ]
 
 

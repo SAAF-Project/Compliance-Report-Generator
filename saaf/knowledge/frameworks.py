@@ -498,6 +498,34 @@ FRAMEWORK_REGISTRY: dict[str, dict] = {
         ],
     },
 
+    "EU_AI_ACT": {
+        "full_name": "EU Artificial Intelligence Act — Regulation (EU) 2024/1689",
+        "description": (
+            "EU regulation on artificial intelligence with extraterritorial reach: it applies to "
+            "providers placing AI systems on the EU market and to providers and deployers outside "
+            "the EU whose system output is used in the EU. Requirements are risk-based; Articles "
+            "9–15 and 17 set the requirements for high-risk AI systems, which apply only after a "
+            "classification under Article 6 and Annexes I/III. Harmonised standards from "
+            "CEN-CENELEC JTC 21 give a presumption of conformity only once cited in the Official "
+            "Journal (OJEU). Of the standards mapped below, only EN 18286 (quality management "
+            "system) is cited; the others are drafts (prEN) and must be presented as such. In "
+            "November 2026 the Article 10 and 12–15 drafts were renumbered as the EN 18229 series; "
+            "the former numbers are noted for traceability. Application dates of the high-risk "
+            "obligations must be confirmed against the current consolidated text."
+        ),
+        # Filled in below from AI_ACT_STANDARDS_MAPPING
+        "domains": [],
+        "audit_topics": ["AI Governance"],
+        "industries": ["*"],
+        "listed_status": ["*"],
+        "jurisdictions": [
+            "EU", "EEA", "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE",
+            "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU",
+            "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
+        ],
+        "extraterritorial": True,
+    },
+
     # ── Netherlands — government ─────────────────────────────────────────
 
     "BIO2": {
@@ -773,7 +801,7 @@ FRAMEWORK_REGISTRY: dict[str, dict] = {
 #
 # KB_VERSION identifies the hand-maintained knowledge base content. Bump it
 # whenever framework or regulation entries change.
-KB_VERSION = "0.2.0"
+KB_VERSION = "0.3.0"
 
 # Per-framework provenance. Keys:
 #   last_reviewed: ISO date (YYYY-MM-DD) a maintainer last verified the entry
@@ -789,7 +817,100 @@ _FRAMEWORK_METADATA: dict[str, dict] = {
         "source": "https://zoek.officielebekendmakingen.nl/stcrt-2026-7416-n1.html",
         "last_reviewed": "2026-10-06",
     },
+    # Standards mapping checked against ai-act-standards.com on 2026-11-17 (issue #57)
+    "EU_AI_ACT": {
+        "source": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+        "last_reviewed": "2026-11-17",
+    },
 }
+
+# ── EU AI Act harmonised standards mapping (issue #57) ────────────────────
+#
+# Which CEN-CENELEC JTC 21 standards support which high-risk requirement of
+# the AI Act. Source: the AI Act standards map (https://ai-act-standards.com/,
+# NoLeFa project), checked 2026-11-17, which follows prEN 18286 Annex B, the
+# draft Annex ZA tables and the CEN-CENELEC project scopes. Stages are CEN
+# stage codes: 20 working draft, 40 enquiry, 60 published. Only a standard
+# with cited=True gives a presumption of conformity. Update the stages, the
+# citation status and AI_ACT_STANDARDS_REVIEWED together.
+AI_ACT_STANDARDS_REVIEWED = "2026-11-17"
+AI_ACT_STANDARDS_SOURCE = "https://ai-act-standards.com/"
+
+AI_ACT_STANDARDS: dict[str, dict] = {
+    "EN 18286": {
+        "title": "Quality management system for EU AI Act regulatory purposes",
+        "stage": 60, "cited": True,
+    },
+    "prEN 18228": {"title": "AI risk management", "stage": 40, "cited": False},
+    "prEN 18229-1": {
+        "title": "AI system requirements — Part 1: Quality and governance of data sets in AI",
+        "stage": 20, "cited": False, "formerly": "prEN 18284",
+    },
+    "prEN 18229-2": {
+        "title": "AI system requirements — Part 2: Concepts, measures and requirements for managing bias in AI systems",
+        "stage": 40, "cited": False, "formerly": "prEN 18283",
+    },
+    "prEN 18229-3": {
+        "title": "AI system requirements — Part 3: Logging",
+        "stage": 40, "cited": False, "formerly": "prEN 18229-1",
+    },
+    "prEN 18229-4": {
+        "title": "AI system requirements — Part 4: Transparency",
+        "stage": 20, "cited": False, "formerly": "prEN 18229-2",
+    },
+    "prEN 18229-5": {
+        "title": "AI system requirements — Part 5: Human oversight",
+        "stage": 40, "cited": False, "formerly": "prEN 18229-3",
+    },
+    "prEN 18229-6": {
+        "title": "AI system requirements — Part 6: Accuracy",
+        "stage": 20, "cited": False, "formerly": "prEN 18229-4",
+    },
+    "prEN 18229-7": {
+        "title": "AI system requirements — Part 7: Robustness",
+        "stage": 20, "cited": False, "formerly": "prEN 18229-5",
+    },
+    "prEN 18229-8": {
+        "title": "AI system requirements — Part 8: Cybersecurity specifications for AI systems",
+        "stage": 40, "cited": False, "formerly": "prEN 18282",
+    },
+}
+
+# AI Act article -> (article title, supporting standards)
+AI_ACT_STANDARDS_MAPPING: dict[str, tuple[str, list[str]]] = {
+    "Art. 9": ("Risk management system", ["prEN 18228"]),
+    "Art. 10": ("Data and data governance", ["prEN 18229-1", "prEN 18229-2"]),
+    "Art. 11": ("Technical documentation", ["EN 18286", "prEN 18229-4"]),
+    "Art. 12": ("Record-keeping", ["prEN 18229-3"]),
+    "Art. 13": ("Transparency and provision of information to deployers", ["prEN 18229-4"]),
+    "Art. 14": ("Human oversight", ["prEN 18229-5"]),
+    "Art. 15": ("Accuracy, robustness and cybersecurity", ["prEN 18229-6", "prEN 18229-7", "prEN 18229-8"]),
+    "Art. 17": ("Quality management system", ["EN 18286"]),
+}
+
+_STAGE_NAMES = {20: "working draft", 40: "enquiry", 60: "published"}
+
+
+def _standard_label(code: str) -> str:
+    std = AI_ACT_STANDARDS[code]
+    if std["cited"]:
+        status = "cited in the OJEU"
+    else:
+        stage = std["stage"]
+        status = f"draft, stage {stage} {_STAGE_NAMES.get(stage, '')}".rstrip() + ", not cited"
+    former = f", formerly {std['formerly']}" if std.get("formerly") else ""
+    return f"{code} {std['title']} ({status}{former})"
+
+
+def ai_act_domains() -> list[str]:
+    """One control domain per AI Act article, naming the standards that support it."""
+    return [
+        f"AI Act {article} {title} — " + "; ".join(_standard_label(c) for c in codes)
+        for article, (title, codes) in AI_ACT_STANDARDS_MAPPING.items()
+    ]
+
+
+FRAMEWORK_REGISTRY["EU_AI_ACT"]["domains"] = ai_act_domains()
 
 for _key, _entry in FRAMEWORK_REGISTRY.items():
     _meta = _FRAMEWORK_METADATA.get(_key, {})
