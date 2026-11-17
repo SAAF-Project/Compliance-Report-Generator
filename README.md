@@ -82,9 +82,13 @@ Notes:
 
 For country `Netherlands` (also `NL`, `The Netherlands`, `Nederland`) with industry `Government`, the mapping adds the **Baseline Informatiebeveiliging Overheid 2 (BIO2)** on security-related topics (Cybersecurity, IT General Controls, Vendor Management, Business Continuity), alongside the EU frameworks that already apply. The entry cites BIO2 v1.3 (Staatscourant 2026, 7416) and its ISO 27001/27002 structure only; it does not enumerate BIO2's government-specific measures, so clause-level references to them are not grounded. See `AUDIT-CRITERIA.md` for the open questions (notably the status for municipalities).
 
+### EU AI Act and its harmonised standards
+
+With audit topic `AI Governance`, the mapping adds the **EU AI Act (Regulation (EU) 2024/1689)** for any jurisdiction, because the Act reaches providers and deployers outside the EU whose AI output is used in the EU. Each high-risk requirement (Arts. 9–15 and 17) is listed with the CEN-CENELEC JTC 21 standards that support it, their stage and whether they are cited in the Official Journal. Only a cited standard (as of 2026-11-17 only EN 18286, quality management system) gives a presumption of conformity; the others are drafts. The mapping follows the [AI Act standards map](https://ai-act-standards.com/) and lives in `AI_ACT_STANDARDS` / `AI_ACT_STANDARDS_MAPPING` in `saaf/knowledge/frameworks.py`, with its review date in `AI_ACT_STANDARDS_REVIEWED`. Standards move through stages quickly, so re-check it before relying on a stage. The mapping does not decide whether a system is high-risk (Art. 6); that needs a separate assessment.
+
 ## Input / output
 
-- **Input**: company name, industry (e.g. `Financial Services`, `Healthcare`), country/jurisdiction, listed status (`Public` / `Private` / `Government`), audit topic (e.g. `Cybersecurity`, `Data Privacy`, `Financial Reporting`)
+- **Input**: company name, industry (e.g. `Financial Services`, `Healthcare`), country/jurisdiction, listed status (`Public` / `Private` / `Government`), audit topic (e.g. `Cybersecurity`, `Data Privacy`, `Financial Reporting`, `AI Governance`)
 - **Output**: rich terminal report or JSON listing applicable regulatory frameworks, control objectives, key gaps, and priority remediation actions
 
 ## Data flow

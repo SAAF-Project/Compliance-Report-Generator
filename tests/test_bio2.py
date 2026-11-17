@@ -29,7 +29,7 @@ DUTCH_SPELLINGS = ["Netherlands", "NL", "The Netherlands", "Nederland", "nederla
 SECURITY_TOPICS = ["Cybersecurity", "IT General Controls", "Vendor Management", "Business Continuity"]
 NON_SECURITY_TOPICS = [
     "Data Privacy", "Financial Reporting", "Anti-Money Laundering",
-    "ESG & Sustainability", "Operational Risk",
+    "ESG & Sustainability", "Operational Risk", "AI Governance",
 ]
 
 

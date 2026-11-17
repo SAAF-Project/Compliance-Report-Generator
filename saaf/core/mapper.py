@@ -231,6 +231,12 @@ class FrameworkMapper:
                 "climate", "emissions", "environment", "social", "governance",
                 "sustainability", "disclosure", "esg", "tcfd", "scope",
             ],
+            "ai governance": [
+                "ai act", "artificial intelligence", "ai system", "algorithm",
+                "model", "bias", "human oversight", "transparency", "risk",
+                "data governance", "record-keeping", "accuracy", "robustness",
+                "quality management",
+            ],
             "operational risk": [
                 "risk", "operational", "governance", "control environment",
                 "monitoring", "assessment", "framework",
