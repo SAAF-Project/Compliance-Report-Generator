@@ -176,6 +176,7 @@ Prohibited: inventing a missing substantive value, or returning a report after s
 - [code] **CO-3.11** — The JSON output carries the warning in `warnings`.
 - [code] **CO-3.12** — A model-supplied `warnings` value is overwritten.
 - [code] **CO-3.13** — A supported country produces no warning.
+- [llm] **CO-3.14** — The report states as fact about the entity only what is in the five engagement fields. Anything else about the company (incidents, size, systems, vendors, past audit results, current controls) is absent or worded as typical for the profile, never as known about this entity. **Limitation:** there is no check in code; the prompt asks for typical gaps but does not forbid entity-specific claims.
 - **Limitation:** the warning only signals the gap and coverage was not extended. Canada, India and Japan resolve to known keys and do not trigger it, although Canada has only minimal matrix entries and India and Japan have no jurisdiction-specific matrix entries.
 
 **CO-4 — Data and secrets**
@@ -290,7 +291,7 @@ The primary output is a framework overview, not a findings list. `--output findi
 - **Audit trail is opt-in and partial.** Failed runs are not recorded, and the prompt is stored only as a hash (see section 7).
 - **No live-model evidence.** See the evidence boundary at the top of this document. Output quality and JSON compliance are not evaluated for any provider. CI runs the unit suite on every PR (`Tests`, plus `Lint`, `Secret scan` and a `Clause sources e2e` job on a schedule and on relevant PRs).
 - **Many criteria are verified by code inspection or a manual run only.** Section 6 marks each one.
-- **The `[llm]` criteria have checks but no scored run.** `llm_checks.yaml` holds one check each for CO-1.24, CO-3.7, M-8, M-9, N-3, N-4, N-6 and N-7. None has been run against a traced real-model run, so those rows stay unverified. To trace and score runs, see section 7.
+- **The `[llm]` criteria have checks but no scored run.** `llm_checks.yaml` holds one check each for CO-1.24, CO-3.7, CO-3.14, M-8, M-9, N-3, N-4, N-6 and N-7. None has been run against a traced real-model run, so those rows stay unverified. To trace and score runs, see section 7.
 - **Dependencies are hash-pinned, but newer than the last probe.** `requirements.txt` and `requirements-dev.txt` are generated from `requirements.in` / `requirements-dev.in` with `uv pip compile --generate-hashes`: every package, transitive ones included, is pinned with its SHA-256 hashes (`anthropic==2.9.0`, `pydantic==2.14.3`, `rich==15.0.0`, `unittest-xml-reporting==4.0.0` are the direct ones). The suite passes on a hash-checked install. The local probes in section 6 (for example the Anthropic redirect behaviour in CO-4.11) ran at `anthropic` 2.7.0 and were not repeated. The hashes prove the file matches what PyPI served when it was generated; they do not vet the packages themselves, and nobody audits the lockfile diff except the reviewer of the pull request.
 - **GitHub Actions in the older workflows are pinned to major tags, not commit SHAs.** `tests.yml`, `lint.yml` and `e2e-clauses.yml` use tags such as `@v7`; only `standards.yml` is pinned to SHAs.
 - **No Session 10 guard is chosen yet.** The pull-request pipeline runs the tests, lint, secret scan and the standards check, but no runtime guard from Session 10.
@@ -387,6 +388,7 @@ Status is **Draft**.
 | CO-3.11 · JSON `warnings` field | Implemented | Code inspection | Not test-verified | `report.warnings` is asserted on the object, not in serialised JSON |
 | CO-3.12 · Model-supplied `warnings` overwritten | Implemented | Mocked agent test | Pass | `TestJurisdictionWarning.test_agent_overrides_model_supplied_warnings` |
 | CO-3.13 · Supported country gives no warning | Implemented | Unit test, CLI subprocess test | Pass | `TestJurisdictionWarning.test_warning_none_for_supported`, `TestJurisdictionWarning.test_cli_no_warning_for_supported` |
+| CO-3.14 · No invented facts about the entity | Not implemented | `[llm]`, none run | Unverified | `llm_checks.yaml` holds the check, no run has been scored |
 | CO-4.1 · Default provider without key raises | Implemented | Unit test | Pass | `TestConfigDefaults.test_missing_anthropic_key_raises` |
 | CO-4.2 · Hosted `openai` without key raises | Implemented | Unit test | Pass | `TestConfigProviders.test_openai_hosted_without_key_raises` |
 | CO-4.3 · `anthropic` with custom endpoint needs key | Implemented | Unit test | Pass | `TestConfigProviders.test_anthropic_still_requires_key_with_custom_endpoint` |
