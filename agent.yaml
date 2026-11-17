@@ -1,0 +1,37 @@
+name: Compliance Report Generator
+repo: SAAF-Project/Compliance-Report-Generator
+island: planning
+# The owner can adjust this as the agent moves through the maturity stages.
+maturity: improving   # building | ready | tested | improving
+category: "Compliance"
+language: Python
+depends_on: []
+tags: [compliance, regulatory-scoping, audit-planning, llm, anthropic, openai-compatible]
+open_slots: 0
+description: "Maps an engagement profile to applicable regulatory frameworks from a built-in knowledge base and has a model draft a structured compliance overview for audit planning."
+
+# The approved mandate. Changing this requires a pull request.
+mandate:
+  purpose: >-
+    Turn a five-field engagement profile into a framework-grounded compliance
+    overview (control objectives, testing approaches, typical gaps, priority
+    actions) that an auditor reviews before using it to plan an engagement.
+  allowed_tools: [read_engagement_profile, read_knowledge_base, read_clause_lists, call_configured_model_endpoint, write_report, write_audit_trail]
+  forbidden_actions:
+    - action: change_own_config
+      rationale: Changes to this mandate, the knowledge base or the clause lists go through a pull request.
+    - action: report_unmapped_framework
+      rationale: Every framework in the output must come from the deterministic mapping; the grounding check rejects anything else.
+    - action: state_compliance_conclusion
+      rationale: The report is generic to a profile and tested against no entity evidence; it is decision support, not an audit conclusion.
+    - action: remove_human_review_disclaimer
+      rationale: The disclaimer is forced after validation so a model cannot omit or rewrite it.
+    - action: follow_endpoint_redirect
+      rationale: A redirect could forward the API key to another host.
+    - action: run_shell_command
+      rationale: The agent runs no shell commands; the guardrails in allowed-commands.md apply.
+  trusted_inputs: [engagement_profile, framework_knowledge_base, official_clause_lists]  # model output and anything else is untrusted
+  max_runtime_minutes: 10   # 180 s timeout per call and 2 retries
+  human_approval_required_for: [using the report in an audit engagement]
+  evidence_policy: cite_only_given_context   # frameworks come from the mapping; cited clauses are checked against clause lists and labelled unverified
+  sharing: standard_is_shared_mandate_is_private

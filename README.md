@@ -161,7 +161,7 @@ See [AUDIT-CRITERIA.md](AUDIT-CRITERIA.md) for control objectives, acceptance cr
 ## Maintainer and licence
 
 - **Maintainer:** Rohan Sobha (see `AUDIT-CRITERIA.md`). Contact through: rohan@vital-dev.com
-- **Licence:** TODO(owner): licence to be decided by Stichting SAAF.
+- **Licence:** MIT, see `LICENSE`. The copyright line (`SAAF-Project contributors`) is the SAAF default; the maintainer confirms it.
 
 ## Part of SAAF Project
 
