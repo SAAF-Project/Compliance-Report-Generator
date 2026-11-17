@@ -193,7 +193,7 @@ class FrameworkMapper:
         For short domain lists, return all. For long ones, do keyword filtering.
         """
         all_domains = fw.get("domains", [])
-        if len(all_domains) <= 6:
+        if len(all_domains) <= 6 or not fw.get("filter_domains", True):
             return all_domains
 
         topic = self.input.audit_topic.lower()
