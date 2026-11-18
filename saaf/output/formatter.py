@@ -4,12 +4,14 @@ Rich-based CLI report renderer.
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from dataclasses import asdict
 from typing import Optional
 
 from rich import box
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
@@ -30,6 +32,20 @@ _RISK_COLOUR = {
 
 _MANDATORY_COLOUR = "bold red"
 _OPTIONAL_COLOUR = "dim"
+
+# C0, DEL and C1 control characters, keeping tab and newline for normal text layout
+_CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
+
+
+def strip_control(text: str) -> str:
+    """Remove control characters from text printed without markup (Text, markup=False)."""
+    return _CONTROL_CHARS.sub("", text)
+
+
+def safe_markup(text: str) -> str:
+    """Make model-written or user-supplied text safe to embed in a Rich markup string."""
+    # Strip first: removing a control character afterwards could rebuild a tag, e.g. "[\x00/dim]"
+    return escape(strip_control(text))
 
 
 def _risk_badge(rating: str) -> Text:
@@ -59,7 +75,7 @@ def render_references_note(
         out.print("  [bold yellow]References to check first (not in the official list, or "
                   "name no mapped framework):[/bold yellow]")
         for c in weak:
-            out.print(f"    - {c.location} / {c.field}: {c.reference}  [{c.note}]", markup=False)
+            out.print(strip_control(f"    - {c.location} / {c.field}: {c.reference}  [{c.note}]"), markup=False)
     out.print()
 
 
@@ -75,18 +91,18 @@ def render_report(
     # ── Header ────────────────────────────────────────────────────────────
     header_text = Text()
     header_text.append("SAAF Compliance Report\n", style="bold white")
-    header_text.append(f"{ai.company_name}  |  ", style="bold cyan")
-    header_text.append(f"{ai.audit_topic}  |  {ai.industry}  |  {ai.country}  |  {ai.listed_status}",
+    header_text.append(strip_control(f"{ai.company_name}  |  "), style="bold cyan")
+    header_text.append(strip_control(f"{ai.audit_topic}  |  {ai.industry}  |  {ai.country}  |  {ai.listed_status}"),
                        style="cyan")
 
     console.print()
     console.print(Panel(header_text, box=box.DOUBLE, padding=(0, 2)))
-    console.print(f"  Report ID: [dim]{report.report_id}[/dim]")
-    console.print(f"  Generated: [dim]{report.generated_at}[/dim]")
+    console.print(f"  Report ID: [dim]{safe_markup(report.report_id)}[/dim]")
+    console.print(f"  Generated: [dim]{safe_markup(report.generated_at)}[/dim]")
     console.print()
 
     for warning in report.warnings:
-        console.print(Panel(f"[yellow]{warning}[/yellow]", title="[bold yellow]Warning[/bold yellow]",
+        console.print(Panel(f"[yellow]{safe_markup(warning)}[/yellow]", title="[bold yellow]Warning[/bold yellow]",
                             border_style="yellow", padding=(0, 2)))
         console.print()
 
@@ -96,7 +112,7 @@ def render_report(
     console.print(
         Panel(
             f"[{overall_colour}]Overall Risk Rating: {summary.overall_risk_rating}[/{overall_colour}]\n\n"
-            f"[italic]{summary.executive_summary}[/italic]",
+            f"[italic]{safe_markup(summary.executive_summary)}[/italic]",
             title="[bold]Executive Summary[/bold]",
             border_style=overall_colour,
             padding=(0, 2),
@@ -112,15 +128,15 @@ def render_report(
         style = _MANDATORY_COLOUR if reg.mandatory else _OPTIONAL_COLOUR
         label = "[MANDATORY]" if reg.mandatory else "[ADVISORY]"
         console.print(
-            f"  [{style}]{label}[/{style}] [bold]{reg.regulation_name}[/bold]  "
-            f"[dim]({reg.jurisdiction})[/dim]"
+            f"  [{style}]{label}[/{style}] [bold]{safe_markup(reg.regulation_name)}[/bold]  "
+            f"[dim]({safe_markup(reg.jurisdiction)})[/dim]"
         )
         if reg.applicable_sections:
             console.print(
-                "    Sections: " + ", ".join(f"[cyan]{s}[/cyan]" for s in reg.applicable_sections)
+                "    Sections: " + ", ".join(f"[cyan]{safe_markup(s)}[/cyan]" for s in reg.applicable_sections)
             )
         if reg.compliance_notes:
-            console.print(f"    [dim]{reg.compliance_notes}[/dim]")
+            console.print(f"    [dim]{safe_markup(reg.compliance_notes)}[/dim]")
         console.print()
 
     # ── Framework assessments ─────────────────────────────────────────────
@@ -129,13 +145,13 @@ def render_report(
     for fw in report.framework_assessments:
         risk_colour = _RISK_COLOUR.get(fw.risk_rating, "white")
         fw_header = Text()
-        fw_header.append(f"  {fw.framework_name}", style="bold")
+        fw_header.append(strip_control(f"  {fw.framework_name}"), style="bold")
         fw_header.append("   Risk: ", style="")
         fw_header.append(fw.risk_rating, style=risk_colour)
 
         console.print()
         console.print(fw_header)
-        console.print(f"  [dim]{fw.applicability_rationale}[/dim]")
+        console.print(f"  [dim]{safe_markup(fw.applicability_rationale)}[/dim]")
         console.print()
 
         # Control objectives table
@@ -155,9 +171,9 @@ def render_report(
             for ctrl in fw.control_objectives:
                 p_colour = _RISK_COLOUR.get(ctrl.priority, "white")
                 table.add_row(
-                    ctrl.control_id,
-                    ctrl.description,
-                    ctrl.requirement_source,
+                    safe_markup(ctrl.control_id),
+                    safe_markup(ctrl.description),
+                    safe_markup(ctrl.requirement_source),
                     Text(ctrl.priority, style=p_colour),
                 )
 
@@ -172,7 +188,7 @@ def render_report(
         if fw.key_gaps:
             console.print("  [bold]Key Gaps:[/bold]")
             for i, gap in enumerate(fw.key_gaps, 1):
-                console.print(f"    {i}. {gap}")
+                console.print(f"    {i}. {safe_markup(gap)}")
         console.print()
 
     # ── Gap & risk summary ────────────────────────────────────────────────
@@ -182,13 +198,13 @@ def render_report(
     if summary.critical_gaps:
         console.print("  [bold red]Critical Gaps:[/bold red]")
         for i, gap in enumerate(summary.critical_gaps, 1):
-            console.print(f"    {i}. [red]{gap}[/red]")
+            console.print(f"    {i}. [red]{safe_markup(gap)}[/red]")
         console.print()
 
     if summary.recommended_priority_actions:
         console.print("  [bold]Priority Actions:[/bold]")
         for i, action in enumerate(summary.recommended_priority_actions, 1):
-            console.print(f"    {i}. {action}")
+            console.print(f"    {i}. {safe_markup(action)}")
         console.print()
 
     effort_colour = _RISK_COLOUR.get(summary.estimated_remediation_effort, "white")
@@ -203,7 +219,7 @@ def render_report(
 
     # ── Disclaimer ────────────────────────────────────────────────────────
     console.print(Panel(
-        f"[dim]{report.disclaimer}[/dim]",
+        f"[dim]{safe_markup(report.disclaimer)}[/dim]",
         title="[dim]Disclaimer[/dim]",
         border_style="dim",
         padding=(0, 2),
@@ -216,11 +232,11 @@ def _render_control_detail(ctrl: ControlObjective) -> None:
     p_colour = _RISK_COLOUR.get(ctrl.priority, "white")
     console.print(
         Panel(
-            f"[bold]{ctrl.description}[/bold]\n\n"
-            f"[dim]Source:[/dim] {ctrl.requirement_source}\n"
-            f"[dim]Testing:[/dim] {ctrl.testing_approach}\n"
+            f"[bold]{safe_markup(ctrl.description)}[/bold]\n\n"
+            f"[dim]Source:[/dim] {safe_markup(ctrl.requirement_source)}\n"
+            f"[dim]Testing:[/dim] {safe_markup(ctrl.testing_approach)}\n"
             f"[dim]Priority:[/dim] [{p_colour}]{ctrl.priority}[/{p_colour}]",
-            title=f"[cyan]{ctrl.control_id}[/cyan]",
+            title=f"[cyan]{safe_markup(ctrl.control_id)}[/cyan]",
             padding=(0, 2),
             expand=False,
         )
