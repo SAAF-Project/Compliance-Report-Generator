@@ -34,11 +34,11 @@ import json
 import re
 import sys
 import time
-import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import egress  # noqa: E402
 from common import USER_AGENT, fetch, write_clause_file  # noqa: E402
 
 RETRIEVED_ON = "2026-10-06"
@@ -289,13 +289,14 @@ def ecfr_get(url: str, cache: Path | None) -> bytes:
     last = None
     for attempt in range(3):
         try:
-            req = urllib.request.Request(url, headers={
-                "User-Agent": USER_AGENT, "Accept-Encoding": "gzip"})
-            with urllib.request.urlopen(req, timeout=180) as r:
+            headers = {"User-Agent": USER_AGENT, "Accept-Encoding": "gzip"}
+            with egress.open_url(url, headers=headers, timeout=180) as r:
                 data = r.read()
                 if r.headers.get("Content-Encoding") == "gzip":
                     data = gzip.decompress(data)
             break
+        except egress.EgressRefused:
+            raise
         except Exception as exc:  # noqa: BLE001
             last = exc
             time.sleep(2 * (attempt + 1))

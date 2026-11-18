@@ -49,10 +49,11 @@ import os
 import re
 import sys
 import time
-import urllib.request
 from datetime import date
 from pathlib import Path
 from typing import Iterable
+
+import egress
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 # SAAF_CLAUSE_OUT_DIR redirects the output (used by the e2e drift job so the
@@ -99,9 +100,10 @@ def fetch(url: str, *, accept: str | None = None, lang: str | None = None,
     last: Exception | None = None
     for attempt in range(retries):
         try:
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+            with egress.open_url(url, headers=headers, timeout=timeout) as resp:
                 return resp.read()
+        except egress.EgressRefused:
+            raise
         except Exception as exc:  # noqa: BLE001, PERF203 - report after retries
             last = exc
             time.sleep(2 * (attempt + 1))
