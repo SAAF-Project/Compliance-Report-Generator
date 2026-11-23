@@ -1,6 +1,6 @@
 """SAAF Sentinel adapter for SAAF-Project/Compliance-Report-Generator.
 
-Copy this file and sentinel.toml to the repository root. It drives the real
+This retained adapter is exercised by tests/test_sentinel_adapter.py. It drives the real
 pipeline end to end: ComplianceAgent.run() with a stub LLM client that returns
 the crafted response, the real Rich formatter, and the real FrameworkMapper
 over every input combination. No API call is ever made.
@@ -105,10 +105,15 @@ AGENT_OWNED = {
 
 
 def render(report) -> str:
-    formatter.console = Console(width=1000, color_system=None, force_terminal=False)
-    with formatter.console.capture() as cap:
-        formatter.render_report(report, verbose=True)
-    return cap.get()
+    previous_console = formatter.console
+    capture_console = Console(width=1000, color_system=None, force_terminal=False)
+    try:
+        formatter.console = capture_console
+        with capture_console.capture() as cap:
+            formatter.render_report(report, verbose=True)
+        return cap.get()
+    finally:
+        formatter.console = previous_console
 
 
 _COUNTRIES = ["US", "Germany", "NL", "UK", "Australia", "Singapore", "Canada", "Brazil"]

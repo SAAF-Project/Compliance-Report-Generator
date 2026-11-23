@@ -11,17 +11,17 @@ concurrency:
 
 permissions:
   contents: read
-  checks: write
-  pull-requests: write
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.12"
           cache: pip
@@ -31,7 +31,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m venv .venv
-          .venv/bin/pip install -r requirements-dev.txt
+          .venv/bin/python -m pip install --require-hashes -r requirements-dev.txt
+          .venv/bin/python -m pip check
 
       - name: Run tests
         run: .venv/bin/python -m xmlrunner discover -s tests -o test-results
@@ -39,19 +40,11 @@ jobs:
           # The suite never calls the API (mocked or --dry-run); the key is a dummy.
           ANTHROPIC_API_KEY: ci-dummy-key
 
-      # Writes the job summary and, on same-repo PRs, one updated PR comment
-      - name: Publish test report
-        if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: test-results/*.xml
-          check_name: Test report
-          comment_mode: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'always' || 'off' }}
-          compare_to_earlier_commit: false
-
       - name: Upload raw results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: test-results
           path: test-results/
+          if-no-files-found: error
+          retention-days: 14
