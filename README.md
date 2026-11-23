@@ -10,7 +10,7 @@ Identifies all applicable regulatory frameworks for a financial entity and produ
 ## How to run
 
 ```bash
-pip install -r requirements.txt
+pip install --require-hashes -r requirements.txt
 
 # Interactive mode
 python cli.py
@@ -178,11 +178,21 @@ See [AUDIT-CRITERIA.md](AUDIT-CRITERIA.md) for control objectives, acceptance cr
 ## Tests
 
 ```bash
-python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+python -m venv .venv && .venv/bin/pip install --require-hashes -r requirements-dev.txt
 .venv/bin/python -m unittest discover -s tests
 ```
 
-CI (`.github/workflows/tests.yml`) runs the same suite on every pull request and push to `main`, and posts a short test report as a PR comment and job summary. The suite makes no API calls.
+CI (`.github/workflows/tests.yml`) runs the same suite on every pull request and push to `main`, with read-only repository permissions. Results appear in the job log and the `test-results` artifact; no write token or PR comment is needed. Model responses are mocked; HTTP tests use only a local loopback server. External clause-source e2e tests remain separate and opt-in locally.
+
+The `Offline adapter contract` workflow replaces an invalid `sentinel.yml` that contained Python source. Run its real parse/render/mapping paths locally with:
+
+```bash
+.venv/bin/python -m unittest tests.test_sentinel_adapter -v
+```
+
+These tests use synthetic model responses, the real validation/grounding and Rich renderer, and all 2,400 built-in mapping profiles. They ensure the existing regulatory matrix's selected keys survive the framework limit. The eight topic-prioritised matches are retained **plus** any otherwise omitted matrix keys; profiles may now exceed eight frameworks. Prompt size can grow, so live cost/output-quality evaluation is still needed. The matrix's legal applicability and extraterritorial rules are unchanged and not independently validated by these tests.
+
+The full Sentinel kit is absent and **not assessed**. The adapter test does not certify model safety, terminal markup safety (existing PR #54), or report completeness. `sentinel.toml` is retained for future integration; it is not an active scan configuration in this workflow.
 
 ## Dependencies
 

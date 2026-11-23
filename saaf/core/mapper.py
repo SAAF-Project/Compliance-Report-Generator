@@ -53,13 +53,13 @@ class FrameworkMapper:
         fw_matches = self._collect_framework_matches(reg_keys)
 
         # Merge regulation keys with framework-derived keys (deduplicated)
-        all_fw_keys = list({m.key for m in fw_matches})
+        all_fw_keys = [m.key for m in fw_matches]
 
         return MappingResult(
             resolved_jurisdiction=self.jurisdiction,
             applicable_framework_keys=all_fw_keys,
             framework_matches=fw_matches,
-            regulation_keys=list(set(reg_keys)),
+            regulation_keys=sorted(set(reg_keys)),
         )
 
     # ------------------------------------------------------------------
@@ -90,7 +90,7 @@ class FrameworkMapper:
             keys = REGULATORY_MATRIX.get(key_tuple, [])
             collected.update(keys)
 
-        return list(collected)
+        return sorted(collected)
 
     def _collect_framework_matches(self, reg_keys: list[str]) -> list[FrameworkMatch]:
         """
@@ -183,9 +183,11 @@ class FrameworkMapper:
 
         matches.sort(key=sort_key)
 
-        # Cap at 8 frameworks — keep the most relevant (sorted above puts
-        # primary-topic matches first, then secondary/regulatory ones).
-        return matches[:8]
+        # Keep the existing eight topic-prioritised matches, but never truncate
+        # a key that the existing regulatory matrix explicitly selected. This
+        # changes selection completeness, not the matrix's applicability rules.
+        prioritised = {match.key for match in matches[:8]}
+        return [m for m in matches if m.key in prioritised or m.key in reg_keys]
 
     def _filter_domains(self, fw: dict) -> list[str]:
         """

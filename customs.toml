@@ -1,0 +1,3 @@
+# Inspect executable/configuration contributions as well as prompt documents.
+# Customs trusts the base branch configuration: these scopes activate after merge.
+extra_include = ["**/*.py", "**/*.yaml", "**/*.yml", "**/*.json", "**/*.toml"]
